@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
-import { useTransactionStore, getPossibleDuplicates, getLoadedMonths, loadMonthData } from "../stores/transactionStore";
+import { useTransactionStore, getLoadedMonths, loadMonthData } from "../stores/transactionStore";
 import type { Transaction } from "../types";
 import CategoryBadge from "../components/CategoryBadge";
 import DataGrid from "../components/DataGrid";
@@ -24,7 +24,25 @@ export default function Statement() {
   const updateCategory = useCategoryStore((s) => s.updateCategory);
 
   const txs = useMemo(() => Object.values(months).flatMap((m) => m.transactions), [months]);
-  const dupGroups = useMemo(() => getPossibleDuplicates(), [months]);
+  const dupGroups = useMemo(() => {
+    const groups = new Map<string, Transaction[]>();
+    for (const tx of txs) {
+      const key = `${tx.date}|${tx.description.toUpperCase()}|${tx.amount}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(tx);
+    }
+    return Array.from(groups.entries())
+      .filter(([, g]) => {
+        const sources = new Set(g.map((t) => t.source));
+        return sources.size > 1 || g.length > 1;
+      })
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, g]) => ({
+        key,
+        txs: g,
+        sources: [...new Set(g.map((t) => t.source))],
+      }));
+  }, [txs]);
 
   const creditCatIds = useMemo(() => new Set(cats.filter((c) => c.type === "credit").map((c) => c.id)), [cats]);
   const debitCatIds = useMemo(() => new Set(cats.filter((c) => c.type !== "credit").map((c) => c.id)), [cats]);

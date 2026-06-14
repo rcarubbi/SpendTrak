@@ -52,14 +52,7 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    boot().then(() => {
-      if (cancelled) setState("setup");
-    });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-  }, []);
+  useEffect(() => { boot(); /* eslint-disable-line react-hooks/set-state-in-effect */ }, []);
 
   if (state === "loading") {
     return (
