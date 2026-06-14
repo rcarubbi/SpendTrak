@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore, getLoadedMonths, loadMonthData } from "../stores/transactionStore";
+import { useUIStore } from "../stores/uiStore";
 import type { Transaction } from "../types";
 import CategoryBadge from "../components/CategoryBadge";
 import DataGrid from "../components/DataGrid";
@@ -8,7 +9,8 @@ import type { ColDef } from "ag-grid-community";
 import { catStyleTag, rowClassRules } from "../utils/styleUtils";
 
 export default function Statement() {
-  const [search, setSearch] = useState("");
+  const search = useUIStore((s) => s.searchQuery);
+  const setSearch = useUIStore((s) => s.setSearchQuery);
   const [catFilter, setCatFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [showDuplicates, setShowDuplicates] = useState(false);
@@ -162,7 +164,7 @@ export default function Statement() {
     <div>
       <style>{tagStyle}</style>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-2xl font-bold dark:text-gray-100">
           Extrato
           {dupGroups.length > 0 && (
             <span className="text-sm font-normal text-amber-600 ml-3">
@@ -176,17 +178,17 @@ export default function Statement() {
         </div>
       </div>
 
-      <div className="flex gap-3 mb-4 items-center">
+      <div className="flex gap-3 mb-4 items-center flex-wrap">
         <input
           placeholder="Buscar descrição..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="flex-1 min-w-[150px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <select
           value={monthFilter}
           onChange={(e) => setMonthFilter(e.target.value)}
-          className="px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <option value="all">Todos meses</option>
           {loadedMonths.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -194,7 +196,7 @@ export default function Statement() {
         <select
           value={catFilter}
           onChange={(e) => setCatFilter(e.target.value)}
-          className="px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <option value="all">Todas categorias</option>
           {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -204,7 +206,7 @@ export default function Statement() {
           className={`px-3 py-2 rounded-md text-sm font-semibold border cursor-pointer transition-colors ${
             showDuplicates
               ? "bg-amber-100 border-amber-300 text-amber-800"
-              : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+              : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
           }`}
         >
           {showDuplicates ? "⇤ Ver todas" : `⚠ Duplicatas (${dupGroups.length})`}
@@ -212,7 +214,7 @@ export default function Statement() {
         <button
           onClick={handleReclassifyAll}
           disabled={loading}
-          className="px-3 py-2 rounded-md text-sm font-semibold border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+          className="px-3 py-2 rounded-md text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer disabled:opacity-50"
         >
           Reclassificar tudo
         </button>
@@ -288,16 +290,16 @@ export default function Statement() {
 
       {pendingReclass && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setPendingReclass(null)}>
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-2">Reclassificar transação</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-2 dark:text-gray-100">Reclassificar transação</h3>
             <p className="text-sm text-gray-500 mb-1">{pendingReclass.tx.date}</p>
-            <p className="text-sm text-gray-700 mb-4 font-medium">{pendingReclass.tx.description.slice(0, 100)}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 font-medium">{pendingReclass.tx.description.slice(0, 100)}</p>
             <div className="flex items-center gap-2 mb-4">
               <CategoryBadge categoryId={pendingReclass.tx.categoryId} />
               <span className="text-gray-400">→</span>
               <CategoryBadge categoryId={pendingReclass.newCategoryId} />
             </div>
-            <label className="flex items-center gap-2 text-sm text-gray-700 mb-4 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-4 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={modalSaveKeyword}
@@ -309,7 +311,7 @@ export default function Statement() {
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setPendingReclass(null)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm cursor-pointer hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 Cancelar
               </button>

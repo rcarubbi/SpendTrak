@@ -60,8 +60,8 @@ export default function Classify() {
   if (unknown.length === 0) {
     return (
       <div>
-        <h1 className="text-2xl font-bold mb-1">Classificar</h1>
-        <p className="text-gray-500">Nenhuma transação não classificada.</p>
+        <h1 className="text-2xl font-bold mb-1 dark:text-gray-100">Classificar</h1>
+        <p className="text-gray-500 dark:text-gray-400">Nenhuma transação não classificada.</p>
       </div>
     );
   }
@@ -69,22 +69,22 @@ export default function Classify() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Classificar ({unknown.length})</h1>
+        <h1 className="text-2xl font-bold dark:text-gray-100">Classificar ({unknown.length})</h1>
       </div>
 
       <div className="flex flex-col gap-2">
         {byDesc.slice(0, 50).map(([desc, info]) => {
           const isOneOff = oneOff[desc] ?? false;
           return (
-            <div key={desc} className="border border-gray-200 rounded-lg p-3 bg-white">
+            <div key={desc} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
               <div className="flex items-start mb-2 gap-2">
                 <div className="flex-1 min-w-0">
-                  <code className="text-xs text-gray-700 break-all">{desc}</code>
-                  <span className="text-gray-400 text-xs ml-2 whitespace-nowrap">
+                  <code className="text-xs text-gray-700 dark:text-gray-300 break-all">{desc}</code>
+                  <span className="text-gray-400 dark:text-gray-500 text-xs ml-2 whitespace-nowrap">
                     {info.count}x · £{info.total.toFixed(2)}
                   </span>
                 </div>
-                <label className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap shrink-0 cursor-pointer select-none">
+                <label className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap shrink-0 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!isOneOff}

@@ -40,3 +40,9 @@ export const useUIStore = create<UIState>((set) => ({
 }));
 
 applyTheme(getInitialTheme());
+
+// Listen for system theme changes when in "system" mode
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  const current = useUIStore.getState().theme;
+  if (current === "system") applyTheme("system");
+});

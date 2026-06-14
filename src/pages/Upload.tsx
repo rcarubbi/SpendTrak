@@ -170,17 +170,17 @@ export default function Upload() {
   return (
     <div>
       <style>{tagStyle}</style>
-      <h1 className="text-2xl font-bold mb-1">Upload</h1>
-      <p className="text-gray-500 mb-6">
+      <h1 className="text-2xl font-bold mb-1 dark:text-gray-100">Upload</h1>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">
         {allTxs.length} transações carregadas · Total: £{debitTotal.toLocaleString()}
       </p>
 
       <div className="flex gap-3 items-center mb-4">
-        <label className="text-sm font-medium text-gray-600">Provider:</label>
+        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Provider:</label>
         <select
           value={selectedProvider}
           onChange={(e) => setSelectedProvider(e.target.value)}
-          className="px-3 py-1.5 rounded-md border border-gray-300 text-sm"
+          className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
         >
           <option value="auto">Auto-detect</option>
           {providers.map((p) => (
@@ -189,25 +189,30 @@ export default function Upload() {
         </select>
       </div>
 
-      <div className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center bg-white mb-6">
-        <p className="text-base text-gray-500 mb-3">
+      <label className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-10 text-center bg-white dark:bg-gray-800 mb-6 block cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+        <p className="text-base text-gray-500 dark:text-gray-400 mb-3">
           Arraste arquivos ou clique para selecionar
         </p>
+        <span className="inline-block px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors">
+          Selecionar arquivos
+        </span>
         <input
           ref={fileRef}
           type="file"
           multiple
           accept={providers.map((p) => p.accept).join(",")}
           onChange={handleParse}
-          className="block mx-auto"
+          className="hidden"
         />
-      </div>
+      </label>
 
       {status && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-lg mb-4 text-sm font-semibold ${
-          status.startsWith("Erro") ? "bg-red-50 border border-red-200 text-red-800" :
-          status.startsWith("Importado") || status.startsWith("Salvando") ? "bg-green-50 border border-green-200 text-green-800" :
-          "bg-blue-50 border border-blue-200 text-blue-800"
+          status.startsWith("Erro")
+            ? "bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300"
+            : status.startsWith("Importado") || status.startsWith("Salvando")
+            ? "bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300"
+            : "bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300"
         }`}>
           {loading && <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0" />}
           {status}
@@ -217,13 +222,13 @@ export default function Upload() {
       {pending && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold">
+            <h2 className="text-base font-semibold dark:text-gray-100">
               Pré-visualização — {pending.transactions.length} transações, {pending.months.length} meses
             </h2>
             <div className="flex gap-2">
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 Cancelar
               </button>
@@ -237,10 +242,10 @@ export default function Upload() {
           </div>
 
           <div className="flex gap-2 flex-wrap mb-3">
-            <span className="text-sm text-gray-500 font-medium">£{pending.total.toLocaleString()} em débitos</span>
-            <span className="text-gray-300">|</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">£{pending.total.toLocaleString()} em débitos</span>
+            <span className="text-gray-300 dark:text-gray-600">|</span>
             {pending.months.map((m) => (
-              <span key={m} className="bg-blue-100 px-2 py-0.5 rounded text-xs font-medium">{m}</span>
+              <span key={m} className="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-xs font-medium dark:text-blue-200">{m}</span>
             ))}
           </div>
 
@@ -255,9 +260,9 @@ export default function Upload() {
       )}
 
       {debug && (
-        <details className="mb-4 text-xs text-gray-500">
+        <details className="mb-4 text-xs text-gray-500 dark:text-gray-400">
           <summary className="cursor-pointer font-semibold">Debug</summary>
-          <pre className="mt-2 p-2 bg-gray-50 rounded border border-gray-200 max-h-40 overflow-auto whitespace-pre-wrap">{debug}</pre>
+          <pre className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 max-h-40 overflow-auto whitespace-pre-wrap dark:text-gray-300">{debug}</pre>
         </details>
       )}
     </div>
