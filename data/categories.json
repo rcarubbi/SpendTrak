@@ -5,19 +5,12 @@
     "color": "#dc2626",
     "type": "debit",
     "keywords": [
-      "LUX BUILDING",
-      "TFLAT1LUXBUILD",
-      "T FLAT 1 LUX BUILD",
-      "YOUR-MOVECOUK",
-      "FOXTON",
-      "RIGHTMOVE",
-      "COUNCIL TAX",
-      "BARKING AND DAGENH",
-      "ROCHDALE",
-      "MBC",
-      "EAST LONDON",
-      "L B HAVERING",
-      "DIRECT"
+      "YOUR-MOVE",
+      "HAVERING",
+      "ESW WATER",
+      "E.ON",
+      "SCOTTISHPOWER",
+      "TV LICENCE"
     ]
   },
   {
@@ -26,21 +19,8 @@
     "color": "#65a30d",
     "type": "debit",
     "keywords": [
-      "PARENTPAY",
-      "SCHOOL",
-      "SCHOLASTIC",
-      "NURSERY",
-      "KIDS",
-      "CHILD",
-      "EDUCATION",
-      "TUITION",
-      "KARATE",
-      "DANCING CLASS",
       "EXPLORE LEARNING",
-      "CONCORDIA ACADEMY",
-      "YALLAR DANCE",
-      "STAGES PERFORMERS",
-      "SABRINA"
+      "STAGES PERFORMERS "
     ]
   },
   {
@@ -49,27 +29,10 @@
     "color": "#16a34a",
     "type": "debit",
     "keywords": [
-      "SAINSBURY",
-      "TESCO",
-      "ASDA",
-      "MORRISON",
-      "WAITROSE",
-      "ALDI",
-      "LIDL",
-      "CO-OP",
-      "CO OP",
-      "ICELAND",
-      "M&S",
-      "MARKS & SPENCER",
-      "MARKS&SPENCER",
-      "OCADO",
+      "THE RANGE",
+      "SAINSBURYS",
       "OCEANIC",
-      "JS ONLINE",
-      "CONVENIENCE",
-      "WHOLEFOODS",
-      "SELECT AND SAVE",
-      "BUDGENS",
-      "CONTACTLESS"
+      "MARKS&SPENCER"
     ]
   },
   {
@@ -78,65 +41,16 @@
     "color": "#ea580c",
     "type": "debit",
     "keywords": [
-      "DELIVEROO",
-      "UBER EATS",
-      "JUST EAT",
-      "MCDONALD",
-      "KFC",
-      "BURGER",
-      "PIZZA",
-      "NANDO",
-      "GREGGS",
-      "PRET",
-      "COSTA",
-      "STARBUCKS",
-      "CAFFE",
-      "COFFEE",
-      "GORDON RAMSAY",
-      "REFECTORY",
-      "RESTAURANT",
-      "SUBWAY",
+      "PARENTPAY",
+      "NANDOS",
       "WAGAMAMA",
-      "SELECTA U.K.",
-      "CAGLAR",
-      "VINTRY",
-      "VINTAGY",
-      "KRISPY KREME",
-      "STEAKHO",
-      "WASABI",
       "ITSU",
-      "CHAO",
-      "KENJI",
-      "TG JONES",
-      "NAKED CHIPS",
-      "LINDT",
-      "SWEET EXPRESS",
-      "GBK",
-      "CHARIOTS",
-      "MIRACLES CAFE",
-      "BUBBLEOLOGY",
-      "FAVORITE ICE",
-      "DUMPLINGS",
+      "DELIVEROO",
       "FIVE GUYS",
-      "FLAT IRON",
-      "ELN WARDOUR",
-      "FRANKIE AND BENNYS",
-      "YE YE",
-      "EATALY",
-      "TEAX",
-      "BLANK STREET",
+      "REFECTORY",
+      "MCDONALDS",
       "KASPAS",
-      "MARUGAME",
-      "VENCHI",
-      "POPEYES",
-      "AKINDO",
-      "HAIDILAO",
-      "NESSUNO",
-      "SABOROSO",
-      "DEBIT",
-      "CONTACTLESS",
-      "CARD",
-      "DIRECT"
+      "WASABI"
     ]
   },
   {
@@ -145,38 +59,10 @@
     "color": "#2563eb",
     "type": "debit",
     "keywords": [
-      "VODAFONE",
+      "NETFLIX.COM",
       "O2",
-      "EE",
-      "THREE",
-      "BT",
-      "SKY",
-      "TV LICENCE",
-      "THAMES WATER",
-      "UNITED UTIL",
-      "NWL & ESW",
-      "BRITISH GAS",
-      "SCOTTISHPOWER",
-      "EDF ENERGY",
-      "E.ON",
-      "OCTOPUS",
-      "VIRGIN MEDIA",
-      "NETFLIX",
       "SPOTIFY",
-      "GOOGLE",
-      "APPLE.COM",
-      "MICROSOFT",
-      "AMAZON PRIME",
-      "HYPEROPTIC",
-      "HP INSTANT INK",
-      "HPI INSTANT",
-      "LAUNDRY",
-      "CHATGPT",
-      "OPENAI",
-      "NESPRESSO",
-      "D&G JEWELLERY CARE",
-      "4929155631511005",
-      "OBA6UAEGWTMGOS0UG"
+      "DISNEY PLUS"
     ]
   },
   {
@@ -185,19 +71,8 @@
     "color": "#7c3aed",
     "type": "debit",
     "keywords": [
-      "TFL TRAVEL",
-      "TFL.GOV",
-      "TRAINLINE",
-      "UBER",
-      "BOLT",
-      "RAIL",
-      "GREATER ANGLIA",
-      "NATIONAL RAIL",
-      "OYSTER",
-      "PARKING",
-      "SHELL",
-      "ESSO",
-      "CARD"
+      "TFL",
+      "UBER *TRIP"
     ]
   },
   {
@@ -206,22 +81,8 @@
     "color": "#0891b2",
     "type": "debit",
     "keywords": [
-      "BOOTS",
       "SUPERDRUG",
-      "PHARMACY",
-      "PHARM",
-      "DENTIST",
-      "DENT",
-      "OPTIC",
-      "SPECSAVERS",
-      "HOSPITAL",
-      "NHS",
-      "TABEO",
-      "AO-OPTICAL",
-      "LUSH",
-      "HAIRDRESSER",
-      "SALUS",
-      "ROBERT BELL"
+      "BOOTS"
     ]
   },
   {
@@ -230,59 +91,7 @@
     "color": "#ca8a04",
     "type": "debit",
     "keywords": [
-      "AMAZON",
-      "AMZN",
-      "ARGOS",
-      "IKEA",
-      "IKANO",
-      "B&Q",
-      "CURRYS",
-      "PRIMARK",
-      "TK MAXX",
-      "T K MAXX",
-      "NEXT",
-      "H&M",
-      "ZARA",
-      "SPORTSDIRECT",
-      "LE CREUSET",
-      "CREATION.CO",
-      "THE-MOUSETRAP",
-      "V12 RETAIL",
-      "BRITA",
-      "THE RANGE",
-      "POUNDLAND",
-      "CLARKS",
-      "DISNEY STORE",
-      "HITACHI CAPITAL",
-      "SELFRIDGES",
-      "NOVUNA",
-      "DEICHMANN",
-      "GEAR4MUSIC",
-      "4OURHOUSE",
-      "BAGGAGE WORLD",
-      "MOOBOO",
-      "HARRODS",
-      "SWAROVSKI",
-      "KLARNA",
-      "NYX",
-      "CALZEDONIA",
-      "BEAUTY BASE",
-      "CLINTONS",
-      "T J MORRIS",
-      "PANDORA",
-      "KEYBOARD COMPANY",
-      "KEYCHRON",
-      "ACER",
-      "KIKO MILANO",
-      "JACK JONES",
-      "LEVI STRAUSS",
-      "ABERCROMBIE",
-      "HILFIGER",
-      "CLARINS",
-      "LEGO STORE",
-      "GEAR4MUSIC",
-      "CARD",
-      "CASH"
+      "RUSH GREEN LAUNDRY"
     ]
   },
   {
@@ -292,35 +101,9 @@
     "type": "debit",
     "keywords": [
       "VUE",
-      "CINEMA",
-      "THEATRE",
-      "EVENT",
-      "HOTEL",
-      "BOOKING",
-      "AIRBNB",
-      "AIRWAYS",
-      "RYANAIR",
-      "EASYJET",
-      "STEAM",
-      "PLAYSTATION",
-      "NINTENDO",
-      "P L P EVENTS",
-      "ARCOLA",
-      "MADAME TUSSAUDS",
-      "INSOMNIA",
-      "MUSEUM",
-      "VENUES",
-      "LONDON SHOP",
-      "DISNEY PLUS",
-      "IWM TICKET",
-      "RA GROUP",
-      "LEGO",
-      "RKGAMING",
       "SMYTHS TOYS",
-      "SPJ CLIMBING",
-      "THE O2",
-      "DEBIT",
-      "CONTACTLESS"
+      "BNAE",
+      "BANDAI NAMCO"
     ]
   },
   {
@@ -328,40 +111,14 @@
     "name": "Transferências",
     "color": "#6b7280",
     "type": "debit",
-    "keywords": [
-      "PAYPAL",
-      "REVOLUT",
-      "TRANSFER",
-      "SAVINGS",
-      "INTEREST",
-      "FEE",
-      "CHARGE",
-      "GARDENER",
-      "CLEANER",
-      "ORGANIZER",
-      "BARCLAYS BANK UK",
-      "MARCOS VICARI",
-      "RITCHIE BRADLEY",
-      "CASH WITHDRAWAL",
-      "HSBC",
-      "PB571270166817577"
-    ]
+    "keywords": []
   },
   {
     "id": "receita",
     "name": "Receita",
     "color": "#059669",
     "type": "credit",
-    "keywords": [
-      "SALARY",
-      "PAYROLL",
-      "MAREX",
-      "BNYMELLON",
-      "PRD",
-      "BGC",
-      "COUNTER CREDIT",
-      "AMAZON MEDIA"
-    ]
+    "keywords": []
   },
   {
     "id": "outros",
@@ -375,24 +132,22 @@
     "name": "Salário",
     "color": "#6366f1",
     "type": "credit",
-    "keywords": [
-      "PEFT-10136351"
-    ]
+    "keywords": []
   },
   {
     "id": "extornos",
     "name": "Extornos",
     "color": "#64f293",
     "type": "credit",
-    "keywords": [
-      "RETURNED"
-    ]
+    "keywords": []
   },
   {
     "id": "mesada",
     "name": "Mesada",
     "color": "#f2c564",
     "type": "debit",
-    "keywords": []
+    "keywords": [
+      "REVOLUT"
+    ]
   }
 ]

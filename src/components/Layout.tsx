@@ -20,7 +20,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [input, setInput] = useState(searchQuery);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -59,6 +59,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       {/* Sidebar */}
       <nav
+        aria-label="Navegação principal"
         className={`fixed md:static z-20 w-56 bg-slate-800 text-white py-5 shrink-0 min-h-screen transition-transform md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -106,9 +107,10 @@ export default function Layout({ children }: { children: ReactNode }) {
           </button>
           <h2 className="font-bold text-gray-800 dark:text-gray-200 shrink-0 hidden md:block">Gastos</h2>
           <input
-            value={searchQuery}
+            value={input}
             onChange={handleSearchChange}
             placeholder="Buscar transações..."
+            aria-label="Buscar transações"
             className="flex-1 max-w-md px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <button

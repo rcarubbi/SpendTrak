@@ -4,7 +4,6 @@ import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useCategoryStore } from "./stores/categoryStore";
 import { useTransactionStore } from "./stores/transactionStore";
-import { useBudgetStore } from "./stores/budgetStore";
 import { ensureDataDir, pickDataDir } from "./utils/fileSystem";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -34,7 +33,6 @@ export default function App() {
         await Promise.all([
           useCategoryStore.getState().init(),
           useTransactionStore.getState().init(),
-          useBudgetStore.getState().init(),
         ]);
         setState("ready");
         return;
@@ -52,7 +50,6 @@ export default function App() {
       await Promise.all([
         useCategoryStore.getState().init(),
         useTransactionStore.getState().init(),
-        useBudgetStore.getState().init(),
       ]);
       setState("ready");
     } catch (err) {

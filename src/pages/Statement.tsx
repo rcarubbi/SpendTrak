@@ -3,11 +3,13 @@ import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore, getLoadedMonths, loadMonthData, getPossibleDuplicates } from "../stores/transactionStore";
 import { useUIStore } from "../stores/uiStore";
 import type { Transaction } from "../types";
-import CategoryBadge from "../components/CategoryBadge";
 import DataGrid from "../components/DataGrid";
+import FilterBar from "../components/FilterBar";
+import DuplicatePanel from "../components/DuplicatePanel";
+import ReclassifyModal from "../components/ReclassifyModal";
 import type { ColDef } from "ag-grid-community";
 import { catStyleTag, rowClassRules } from "../utils/styleUtils";
-import { extractKeyword } from "../utils/classify";
+import { extractKeyword, matchKeyword } from "../utils/classify";
 
 export default function Statement() {
   const search = useUIStore((s) => s.searchQuery);
@@ -16,8 +18,9 @@ export default function Statement() {
   const [monthFilter, setMonthFilter] = useState("all");
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [reclassProgress, setReclassProgress] = useState<{ done: number; total: number } | null>(null);
   const [pendingReclass, setPendingReclass] = useState<{ tx: Transaction; newCategoryId: string } | null>(null);
-  const [modalSaveKeyword, setModalSaveKeyword] = useState(false);
+  const [customKeyword, setCustomKeyword] = useState("");
 
   const cats = useCategoryStore((s) => s.categories);
   const months = useTransactionStore((s) => s.months);
@@ -39,8 +42,7 @@ export default function Statement() {
   const creditTotal = useMemo(() => txs.reduce((s, t) => (creditCatIds.has(t.categoryId) ? s + t.amount : s), 0), [txs, creditCatIds]);
 
   const handleMergeDuplicates = useCallback(async (groupTxs: Transaction[]) => {
-    // Keep the first transaction, delete the rest
-    const [keep, ...rest] = groupTxs;
+    const [, ...rest] = groupTxs;
     for (const tx of rest) {
       for (const monthKey of getLoadedMonths()) {
         const [year, month] = monthKey.split("-").map(Number);
@@ -64,21 +66,19 @@ export default function Statement() {
     }
   }, [deleteTx]);
 
-  const handleReclassify = useCallback(async (tx: Transaction, newCategoryId: string, saveKw: boolean) => {
-    if (saveKw) {
-      const oldCat = cats.find((c) => c.id === tx.categoryId);
-      const newCat = cats.find((c) => c.id === newCategoryId);
-      if (oldCat && newCat) {
-        const matching = oldCat.keywords.filter((k) => tx.description.toUpperCase().includes(k.toUpperCase()));
-        if (matching.length > 0) {
-          await updateCategory(oldCat.id, { keywords: oldCat.keywords.filter((k) => !matching.includes(k)) });
-        }
-        const keyword = extractKeyword(tx.description);
-        if (keyword) {
-          const kw = keyword.toUpperCase();
-          if (!newCat.keywords.some((k) => k.toUpperCase() === kw)) {
-            await updateCategory(newCat.id, { keywords: [...newCat.keywords, kw] });
-          }
+  const handleReclassify = useCallback(async (tx: Transaction, newCategoryId: string, kwOverride: string) => {
+    const oldCat = cats.find((c) => c.id === tx.categoryId);
+    const newCat = cats.find((c) => c.id === newCategoryId);
+    if (oldCat && newCat) {
+      const matching = oldCat.keywords.filter((k) => matchKeyword(tx.description, k));
+      if (matching.length > 0) {
+        await updateCategory(oldCat.id, { keywords: oldCat.keywords.filter((k) => !matching.includes(k)) });
+      }
+      const keyword = kwOverride || extractKeyword(tx.description);
+      if (keyword) {
+        const kw = keyword.toUpperCase();
+        if (!newCat.keywords.some((k) => k.toUpperCase() === kw)) {
+          await updateCategory(newCat.id, { keywords: [...newCat.keywords, kw] });
         }
       }
     }
@@ -93,13 +93,18 @@ export default function Statement() {
 
   const confirmReclassify = useCallback(async () => {
     if (!pendingReclass) return;
-    await handleReclassify(pendingReclass.tx, pendingReclass.newCategoryId, modalSaveKeyword);
+    await handleReclassify(pendingReclass.tx, pendingReclass.newCategoryId, customKeyword);
     setPendingReclass(null);
-  }, [pendingReclass, modalSaveKeyword, handleReclassify]);
+    setCustomKeyword("");
+  }, [pendingReclass, customKeyword, handleReclassify]);
 
   const handleReclassifyAll = useCallback(async () => {
     setLoading(true);
-    await reclassifyAll(cats);
+    setReclassProgress({ done: 0, total: 0 });
+    await reclassifyAll(cats, (done, total) => {
+      setReclassProgress({ done, total });
+    });
+    setReclassProgress(null);
     setLoading(false);
   }, [cats, reclassifyAll]);
 
@@ -120,6 +125,7 @@ export default function Statement() {
 
   const tagStyle = useMemo(() => catStyleTag(cats), [cats]);
   const rowRules = useMemo(() => rowClassRules(cats), [cats]);
+  const autoKeyword = pendingReclass ? extractKeyword(pendingReclass.tx.description) : "";
 
   const handleEditDescription = useCallback(async (tx: Transaction, newDesc: string) => {
     if (newDesc === tx.description || !newDesc.trim()) return;
@@ -142,6 +148,7 @@ export default function Statement() {
           onBlur={(e) => handleEditDescription(p.data, e.target.value)}
           className="w-full bg-transparent border-none outline-none text-sm"
           style={{ color: "inherit" }}
+          aria-label="Editar descrição"
           onClick={(e) => e.stopPropagation()}
         />
       ),
@@ -156,10 +163,10 @@ export default function Statement() {
         <select
           value={p.data.categoryId}
           onChange={(e) => {
-            if (e.target.value !== p.data.categoryId) {
-              setPendingReclass({ tx: p.data, newCategoryId: e.target.value });
-              setModalSaveKeyword(false);
-              (e.target as HTMLSelectElement).value = p.data.categoryId;
+              if (e.target.value !== p.data.categoryId) {
+                setPendingReclass({ tx: p.data, newCategoryId: e.target.value });
+                setCustomKeyword("");
+                (e.target as HTMLSelectElement).value = p.data.categoryId;
             }
           }}
           className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 w-full bg-transparent"
@@ -202,111 +209,30 @@ export default function Statement() {
         </div>
       </div>
 
-      <div className="flex gap-3 mb-4 items-center flex-wrap">
-        <input
-          placeholder="Buscar descrição..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[150px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 md:hidden"
-        />
-        <select
-          value={monthFilter}
-          onChange={(e) => setMonthFilter(e.target.value)}
-          className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          <option value="all">Todos meses</option>
-          {loadedMonths.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
-        <select
-          value={catFilter}
-          onChange={(e) => setCatFilter(e.target.value)}
-          className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          <option value="all">Todas categorias</option>
-          {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <button
-          onClick={() => setShowDuplicates((d) => !d)}
-          className={`px-3 py-2 rounded-md text-sm font-semibold border cursor-pointer transition-colors ${
-            showDuplicates
-              ? "bg-amber-100 border-amber-300 text-amber-800"
-              : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-          }`}
-        >
-          {showDuplicates ? "⇤ Ver todas" : `⚠ Duplicatas (${dupGroups.length})`}
-        </button>
-        <button
-          onClick={handleReclassifyAll}
-          disabled={loading}
-          className="px-3 py-2 rounded-md text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer disabled:opacity-50"
-        >
-          Reclassificar tudo
-        </button>
-      </div>
-
-      {loading && (
-        <div className="flex items-center gap-2 mb-4 text-sm text-blue-700">
-          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          Reclassificando transações...
-        </div>
-      )}
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        monthFilter={monthFilter}
+        onMonthFilterChange={setMonthFilter}
+        loadedMonths={loadedMonths}
+        catFilter={catFilter}
+        onCatFilterChange={setCatFilter}
+        cats={cats}
+        showDuplicates={showDuplicates}
+        onToggleDuplicates={() => setShowDuplicates((d) => !d)}
+        dupCount={dupGroups.length}
+        onReclassifyAll={handleReclassifyAll}
+        reclassLoading={loading}
+        reclassProgress={reclassProgress}
+      />
 
       {showDuplicates ? (
-        <div className="flex flex-col gap-3">
-          {dupGroups.length === 0 && (
-            <p className="text-center text-gray-400 dark:text-white mt-8">Nenhuma duplicata encontrada</p>
-          )}
-          {dupGroups.map((group) => (
-            <div key={group.key} className="border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50 dark:bg-amber-900/20 overflow-hidden">
-              <div className="px-3 py-2 bg-amber-100 dark:bg-amber-900/40 text-xs font-semibold text-amber-800 dark:text-amber-300 border-b border-amber-200 dark:border-amber-800 flex justify-between items-center">
-                <span className="truncate">
-                  {group.txs[0].date} · {group.txs[0].description} · £{group.txs[0].amount.toFixed(2)}
-                </span>
-                <div className="flex items-center gap-2 shrink-0 ml-2">
-                  <span>{group.txs.length} entrada(s) · {group.sources.join(", ")}</span>
-                  <button
-                    onClick={() => handleMergeDuplicates(group.txs)}
-                    className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 font-bold text-xs cursor-pointer"
-                    title="Manter esta, remover duplicatas"
-                  >
-                    ✕ Manter esta
-                  </button>
-                </div>
-              </div>
-              <div className="p-1">
-                <DataGrid
-                  rows={group.txs}
-                  colDefs={[
-                    { field: "source", headerName: "Arquivo", width: 140 },
-                    { field: "account", headerName: "Conta", width: 120 },
-                    {
-                      field: "amount", headerName: "Valor", width: 90, type: "rightAligned",
-                      valueFormatter: (p) => `£${p.value?.toFixed(2) ?? "0.00"}`,
-                    },
-                    {
-                      field: "categoryId", headerName: "Categoria", width: 120,
-                      cellRenderer: (p: { value: string }) => <CategoryBadge categoryId={p.value} />,
-                    },
-                    {
-                      headerName: "", width: 80, sortable: false, filter: false,
-                      cellRenderer: (p: { data: Transaction }) => (
-                        <button
-                          onClick={() => handleDelete(p.data.id)}
-                          className="text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer"
-                        >
-                          Remover
-                        </button>
-                      ),
-                    },
-                  ]}
-                  height={group.txs.length * 40 + 50}
-                  exportFilename={`duplicata-${group.txs[0].date}`}
-                  rowClassRules={rowRules}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+        <DuplicatePanel
+          groups={dupGroups}
+          onMerge={handleMergeDuplicates}
+          onDelete={handleDelete}
+          rowClassRules={rowRules}
+        />
       ) : (
         <DataGrid
           rows={filtered}
@@ -323,41 +249,15 @@ export default function Statement() {
       )}
 
       {pendingReclass && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setPendingReclass(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-2 dark:text-white">Reclassificar transação</h3>
-            <p className="text-sm text-gray-500 dark:text-white mb-1">{pendingReclass.tx.date}</p>
-            <p className="text-sm text-gray-700 dark:text-white mb-4 font-medium">{pendingReclass.tx.description.slice(0, 100)}</p>
-            <div className="flex items-center gap-2 mb-4">
-              <CategoryBadge categoryId={pendingReclass.tx.categoryId} />
-              <span className="text-gray-400 dark:text-white">→</span>
-              <CategoryBadge categoryId={pendingReclass.newCategoryId} />
-            </div>
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-white mb-4 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={modalSaveKeyword}
-                onChange={(e) => setModalSaveKeyword(e.target.checked)}
-                className="accent-blue-600"
-              />
-              Salvar regra (auto-classificar futuros)
-            </label>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setPendingReclass(null)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-white rounded-md text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmReclassify}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
+        <ReclassifyModal
+          tx={pendingReclass.tx}
+          newCategoryId={pendingReclass.newCategoryId}
+          customKeyword={customKeyword}
+          onCustomKeywordChange={setCustomKeyword}
+          autoKeyword={autoKeyword}
+          onConfirm={confirmReclassify}
+          onCancel={() => { setPendingReclass(null); setCustomKeyword(""); }}
+        />
       )}
     </div>
   );

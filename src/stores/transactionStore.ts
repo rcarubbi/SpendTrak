@@ -21,7 +21,7 @@ interface TransactionState {
   saveMonthData: (data: MonthData) => Promise<void>;
   deleteTransaction: (year: number, month: number, txId: string) => Promise<void>;
   updateTransaction: (txId: string, updates: Partial<Transaction>) => Promise<void>;
-  reclassifyAll: (categories: Category[]) => Promise<void>;
+  reclassifyAll: (categories: Category[], onProgress?: (done: number, total: number) => void) => Promise<void>;
 }
 
 export const useTransactionStore = create<TransactionState>((set, get) => ({
@@ -94,16 +94,21 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     if (changed) set({ months: newMonths });
   },
 
-  reclassifyAll: async (categories) => {
+  reclassifyAll: async (categories, onProgress) => {
     const state = get();
+    const entries = Object.entries(state.months);
+    const total = entries.reduce((s, [, m]) => s + m.transactions.filter((t) => !t.manual).length, 0);
+    let processed = 0;
     const newMonths = { ...state.months };
     let anyChanged = false;
 
-    for (const [key, monthData] of Object.entries(newMonths)) {
+    for (const [key, monthData] of entries) {
       let changed = false;
       const newTxs = monthData.transactions.map((tx) => {
         if (tx.manual) return tx;
         const newId = classify(tx.description, categories);
+        processed++;
+        if (total > 0) onProgress?.(processed, total);
         if (newId !== tx.categoryId) {
           changed = true;
           return { ...tx, categoryId: newId };
@@ -123,14 +128,20 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   },
 }));
 
+let _cachedMonths: Record<string, MonthData> | null = null;
+let _cachedTxs: Transaction[] = [];
+
 export function getAllTransactions(): Transaction[] {
   const months = useTransactionStore.getState().months;
+  if (_cachedMonths === months) return _cachedTxs;
   const keys = Object.keys(months).sort();
-  const txs: Transaction[] = [];
+  const result: Transaction[] = [];
   for (const key of keys) {
-    txs.push(...months[key].transactions);
+    result.push(...months[key].transactions);
   }
-  return txs;
+  _cachedMonths = months;
+  _cachedTxs = result;
+  return result;
 }
 
 export function getUnclassifiedTransactions(): Transaction[] {

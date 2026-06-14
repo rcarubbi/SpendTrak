@@ -42,7 +42,14 @@ export const useUIStore = create<UIState>((set) => ({
 applyTheme(getInitialTheme());
 
 // Listen for system theme changes when in "system" mode
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+const controller = new AbortController();
+mediaQuery.addEventListener("change", () => {
   const current = useUIStore.getState().theme;
   if (current === "system") applyTheme("system");
-});
+}, { signal: controller.signal });
+
+// Cleanup on HMR
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => controller.abort());
+}

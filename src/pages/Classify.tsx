@@ -9,9 +9,13 @@ export default function Classify() {
   const months = useTransactionStore((s) => s.months);
   const doSaveMonthData = useTransactionStore((s) => s.saveMonthData);
   const updateCategory = useCategoryStore((s) => s.updateCategory);
+  const reclassifyAll = useTransactionStore((s) => s.reclassifyAll);
 
   const [oneOff, setOneOff] = useState<Record<string, boolean>>({});
+  const [customKeywords, setCustomKeywords] = useState<Record<string, string>>({});
   const [showAll, setShowAll] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [reclassProgress, setReclassProgress] = useState<{ done: number; total: number } | null>(null);
   const unknown = useMemo(
     () => Object.values(months).flatMap((m) => m.transactions).filter((tx) => tx.categoryId === "outros"),
     [months]
@@ -42,7 +46,8 @@ export default function Classify() {
     if (!cat) return;
 
     if (saveKeyword) {
-      const keyword = extractKeyword(description);
+      const kwOverride = customKeywords[description] || "";
+      const keyword = kwOverride || extractKeyword(description);
       if (keyword && !cat.keywords.includes(keyword)) {
         await updateCategory(catId, { keywords: [...cat.keywords, keyword] });
       }
@@ -59,7 +64,17 @@ export default function Classify() {
       const [y, m] = monthKey.split("-").map(Number);
       await doSaveMonthData({ year: y, month: m, transactions: txs, uploadedAt: new Date().toISOString() });
     }
-  }, [byDesc, cats, updateCategory, doSaveMonthData]);
+  }, [byDesc, cats, updateCategory, doSaveMonthData, customKeywords]);
+
+  const handleReclassifyAll = useCallback(async () => {
+    setLoading(true);
+    setReclassProgress({ done: 0, total: 0 });
+    await reclassifyAll(cats, (done, total) => {
+      setReclassProgress({ done, total });
+    });
+    setReclassProgress(null);
+    setLoading(false);
+  }, [cats, reclassifyAll]);
 
   if (unknown.length === 0) {
     return (
@@ -74,7 +89,22 @@ export default function Classify() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold dark:text-gray-100">Classificar ({unknown.length})</h1>
+        <button
+          onClick={handleReclassifyAll}
+          disabled={loading}
+          className="px-3 py-2 rounded-md text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer disabled:opacity-50"
+        >
+          Reclassificar tudo
+        </button>
       </div>
+      {loading && (
+        <div className="flex items-center gap-2 mb-4 text-sm text-blue-700">
+          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
+          {reclassProgress
+            ? `Reclassificando... ${reclassProgress.done}/${reclassProgress.total}`
+            : "Reclassificando transações..."}
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         {visible.map(([desc, info]) => {
@@ -98,6 +128,15 @@ export default function Classify() {
                   Auto
                 </label>
               </div>
+              {!isOneOff && (
+                <input
+                  type="text"
+                  value={customKeywords[desc] ?? ""}
+                  onChange={(e) => setCustomKeywords((prev) => ({ ...prev, [desc]: e.target.value }))}
+                  placeholder={extractKeyword(desc) || "Keyword manual..."}
+                  className="w-full mb-2 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                />
+              )}
               <div className="flex gap-1 flex-wrap">
                 {cats.filter((c) => c.id !== "outros" && c.id !== "receita").map((cat) => (
                   <button

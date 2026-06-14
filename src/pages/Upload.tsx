@@ -163,6 +163,7 @@ export default function Upload() {
   }, [pending, saveMonthData]);
 
   const handleCancel = () => {
+    if (!confirm("Descartar pré-visualização?")) return;
     setPending(null);
     setStatus("");
     setDebug("");

@@ -13,8 +13,7 @@ interface PdfItem {
   y: number;
 }
 
-const debugLog: string[] = [];
-function dbg(msg: string) { debugLog.push(msg); }
+
 
 // Matches numbers with exactly 2 decimal places: 6.99, 1,234.56
 const AMOUNT_RE = /(\d[\d,]*\.\d{2})/g;
@@ -48,6 +47,8 @@ export class BarclaysPdfProvider implements UploadProvider {
   id = "barclays-pdf";
   name = "Barclays Account PDF";
   accept = ".pdf";
+  private debugLog: string[] = [];
+  private dbg = (msg: string) => { this.debugLog.push(msg); };
 
   detectByExtension(fileName: string): boolean {
     const name = fileName.toUpperCase();
@@ -60,8 +61,8 @@ export class BarclaysPdfProvider implements UploadProvider {
   }
 
   private doParse(file: File, pdfjsLib: typeof PdfJs): Promise<ParseResult> {
-    debugLog.length = 0;
-    dbg(`File: ${file.name} (${file.size} bytes)`);
+    this.debugLog = [];
+    this.dbg(`File: ${file.name} (${file.size} bytes)`);
 
     return (async () => {
       const buffer = await file.arrayBuffer();
@@ -72,7 +73,7 @@ export class BarclaysPdfProvider implements UploadProvider {
       for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
         const vp = page.getViewport({ scale: 1 });
-        dbg(`Page ${p}: w=${vp.width.toFixed(0)} h=${vp.height.toFixed(0)}`);
+        this.dbg(`Page ${p}: w=${vp.width.toFixed(0)} h=${vp.height.toFixed(0)}`);
 
         const content = await page.getTextContent();
         const items: PdfItem[] = [];
@@ -101,14 +102,14 @@ export class BarclaysPdfProvider implements UploadProvider {
         }
       }
 
-      dbg(`Total lines (all pages): ${rawLines.length}`);
+      this.dbg(`Total lines (all pages): ${rawLines.length}`);
 
-      dbg("--- LINE TEXT (first 60) ---");
+      this.dbg("--- LINE TEXT (first 60) ---");
       for (let i = 0; i < Math.min(60, rawLines.length); i++) {
         const l = rawLines[i];
-        dbg(`L${i} y=${l.y.toFixed(0)} | ${l.text.slice(0, 140).replace(/\n/g, "↵")}`);
+        this.dbg(`L${i} y=${l.y.toFixed(0)} | ${l.text.slice(0, 140).replace(/\n/g, "↵")}`);
       }
-      dbg("--- END LINE TEXT ---");
+      this.dbg("--- END LINE TEXT ---");
 
       let statementYear = new Date().getFullYear();
       for (const line of rawLines) {
@@ -116,13 +117,13 @@ export class BarclaysPdfProvider implements UploadProvider {
         if (m) {
           const y = parseInt(m[3]);
           statementYear = y < 100 ? 2000 + y : y;
-          dbg(`Year: ${statementYear}`);
+          this.dbg(`Year: ${statementYear}`);
           break;
         }
       }
 
       const txs = this.parseLineText(rawLines, statementYear);
-      dbg(`TXs: ${txs.length}`);
+      this.dbg(`TXs: ${txs.length}`);
 
       return this.buildResult(txs);
     })();
@@ -258,7 +259,7 @@ export class BarclaysPdfProvider implements UploadProvider {
       transactions: txs,
       months: Array.from(months).sort(),
       total,
-      debug: debugLog.join("\n"),
+      debug: this.debugLog.join("\n"),
     };
   }
 }

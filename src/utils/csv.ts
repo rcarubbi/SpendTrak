@@ -63,9 +63,9 @@ export function extractYearMonth(fileName: string): { year: number; month: numbe
   const match1 = name.match(/(\d{4})[_-](\d{2})/);
   if (match1) return { year: parseInt(match1[1]), month: parseInt(match1[2]) };
 
-  // Try pattern like "2025.csv" -> use current year's months based on data
+  // Try pattern like "2025.csv" -> infer January
   const match2 = name.match(/(\d{4})/);
-  if (match2) return { year: parseInt(match2[1]), month: 0 };
+  if (match2) return { year: parseInt(match2[1]), month: 1 };
 
   return null;
 }

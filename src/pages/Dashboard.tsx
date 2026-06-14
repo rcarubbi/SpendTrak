@@ -41,62 +41,59 @@ export default function Dashboard() {
     }
   }, [monthsInYear, selectedMonth]);
 
-  const yearDebit = useMemo(() => {
-    const agg = new Map<string, number>();
+  const [yearDebit, yearCredit, barData, monthDebit, monthCredit] = useMemo(() => {
+    const yearAgg = new Map<string, number>();
+    let yearCred = 0;
+    const barMap = new Map<string, { month: string; [cat: string]: number | string }>();
+    let mDebit: { name: string; value: number }[] = [];
+    let mCred = 0;
+
     for (const tx of txs) {
-      if (tx.date.slice(0, 4) !== selectedYear || !debitCatIds.has(tx.categoryId)) continue;
-      agg.set(tx.categoryId, (agg.get(tx.categoryId) || 0) + tx.amount);
+      const isYear = tx.date.slice(0, 4) === selectedYear;
+      const isMonth = selectedMonth && tx.date.slice(0, 7) === selectedMonth;
+      const isDebit = debitCatIds.has(tx.categoryId);
+      const isCredit = creditCatIds.has(tx.categoryId);
+
+      if (isYear && isDebit) {
+        yearAgg.set(tx.categoryId, (yearAgg.get(tx.categoryId) || 0) + tx.amount);
+      }
+      if (isYear && isCredit) {
+        yearCred += tx.amount;
+      }
+      if (isYear && isDebit) {
+        const month = tx.date.slice(5, 7);
+        const catName = cats.find((c) => c.id === tx.categoryId)?.name ?? tx.categoryId;
+        if (!barMap.has(month)) barMap.set(month, { month } as { month: string; [cat: string]: number | string });
+        const entry = barMap.get(month)!;
+        entry[catName] = ((entry[catName] as number) || 0) + Math.round(tx.amount);
+      }
+      if (isMonth && isDebit) {
+        const idx = mDebit.findIndex((d) => d.name === tx.categoryId);
+        if (idx >= 0) mDebit[idx].value += Math.round(tx.amount);
+        else mDebit.push({ name: tx.categoryId, value: Math.round(tx.amount) });
+      }
+      if (isMonth && isCredit) {
+        mCred += tx.amount;
+      }
     }
-    return Array.from(agg.entries())
+
+    const yearDeb = Array.from(yearAgg.entries())
       .map(([id, value]) => ({ name: cats.find((c) => c.id === id)?.name ?? id, value: Math.round(value) }))
       .sort((a, b) => b.value - a.value);
-  }, [txs, cats, selectedYear, debitCatIds]);
 
-  const yearCredit = useMemo(() => {
-    let total = 0;
-    for (const tx of txs) {
-      if (tx.date.slice(0, 4) === selectedYear && creditCatIds.has(tx.categoryId)) total += tx.amount;
-    }
-    return total;
-  }, [txs, selectedYear, creditCatIds]);
+    const bar = Array.from(barMap.values()).sort((a, b) => String(a.month).localeCompare(String(b.month)));
 
-  const monthDebit = useMemo(() => {
-    if (!selectedMonth) return [];
-    const agg = new Map<string, number>();
-    for (const tx of txs) {
-      if (tx.date.slice(0, 7) !== selectedMonth || !debitCatIds.has(tx.categoryId)) continue;
-      agg.set(tx.categoryId, (agg.get(tx.categoryId) || 0) + tx.amount);
+    if (selectedMonth) {
+      mDebit = mDebit
+        .map((d) => ({ name: cats.find((c) => c.id === d.name)?.name ?? d.name, value: d.value }))
+        .sort((a, b) => b.value - a.value);
     }
-    return Array.from(agg.entries())
-      .map(([id, value]) => ({ name: cats.find((c) => c.id === id)?.name ?? id, value: Math.round(value) }))
-      .sort((a, b) => b.value - a.value);
-  }, [txs, cats, selectedMonth, debitCatIds]);
 
-  const monthCredit = useMemo(() => {
-    if (!selectedMonth) return 0;
-    let total = 0;
-    for (const tx of txs) {
-      if (tx.date.slice(0, 7) === selectedMonth && creditCatIds.has(tx.categoryId)) total += tx.amount;
-    }
-    return total;
-  }, [txs, selectedMonth, creditCatIds]);
+    return [yearDeb, yearCred, bar, mDebit, mCred] as const;
+  }, [txs, cats, selectedYear, selectedMonth, debitCatIds, creditCatIds]);
 
   const totalYear = yearDebit.reduce((s, d) => s + d.value, 0);
   const totalMonth = monthDebit.reduce((s, d) => s + d.value, 0);
-
-  // Bar chart data
-  const barData = useMemo(() => {
-    const map = new Map<string, { month: string; [cat: string]: number | string }>();
-    for (const tx of txs) {
-      if (tx.date.slice(0, 4) !== selectedYear || !debitCatIds.has(tx.categoryId)) continue;
-      const month = tx.date.slice(5, 7);
-      const catName = cats.find((c) => c.id === tx.categoryId)?.name ?? tx.categoryId;
-      if (!map.has(month)) map.set(month, { month } as { month: string; [cat: string]: number | string });
-      const entry = map.get(month)!;
-      entry[catName] = ((entry[catName] as number) || 0) + Math.round(tx.amount);
-    }
-    return Array.from(map.values()).sort((a, b) => String(a.month).localeCompare(String(b.month)));
-  }, [txs, cats, selectedYear, debitCatIds]);
 
   const catNames = useMemo(() => {
     const names = new Set<string>();
