@@ -1,8 +1,6 @@
 import type { UploadProvider, ParseResult } from "./types";
 import type { Transaction } from "../types";
-import * as pdfjsLib from "pdfjs-dist";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).href;
+import type * as PdfJs from "pdfjs-dist";
 
 const MONTHS: Record<string, string> = {
   JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
@@ -57,81 +55,83 @@ export class BarclaysPdfProvider implements UploadProvider {
   }
 
   async parse(file: File): Promise<ParseResult> {
+    const pdfjsLib = await importPdfJs();
+    return this.doParse(file, pdfjsLib);
+  }
+
+  private doParse(file: File, pdfjsLib: typeof PdfJs): Promise<ParseResult> {
     debugLog.length = 0;
     dbg(`File: ${file.name} (${file.size} bytes)`);
 
-    const buffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    return (async () => {
+      const buffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
 
-    // Process each page separately, then combine lines in page order
-    const rawLines: { y: number; text: string }[] = [];
+      const rawLines: { y: number; text: string }[] = [];
 
-    for (let p = 1; p <= pdf.numPages; p++) {
-      const page = await pdf.getPage(p);
-      const vp = page.getViewport({ scale: 1 });
-      dbg(`Page ${p}: w=${vp.width.toFixed(0)} h=${vp.height.toFixed(0)}`);
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const vp = page.getViewport({ scale: 1 });
+        dbg(`Page ${p}: w=${vp.width.toFixed(0)} h=${vp.height.toFixed(0)}`);
 
-      const content = await page.getTextContent();
-      const items: PdfItem[] = [];
-      for (const item of content.items) {
-        const ti = item as { str: string; transform: number[] };
-        const s = ti.str.trim();
-        if (!s) continue;
-        items.push({ str: s, x: ti.transform[4], y: ti.transform[5] });
-      }
+        const content = await page.getTextContent();
+        const items: PdfItem[] = [];
+        for (const item of content.items) {
+          const ti = item as { str: string; transform: number[] };
+          const s = ti.str.trim();
+          if (!s) continue;
+          items.push({ str: s, x: ti.transform[4], y: ti.transform[5] });
+        }
 
-      items.sort((a, b) => a.y - b.y || a.x - b.x);
+        items.sort((a, b) => a.y - b.y || a.x - b.x);
 
-      // Group into lines by Y (±0.3px tolerance)
-      const groups: PdfItem[][] = [];
-      for (const item of items) {
-        const last = groups[groups.length - 1];
-        if (last && Math.abs(item.y - last[0].y) <= 0.3) {
-          last.push(item);
-        } else {
-          groups.push([item]);
+        const groups: PdfItem[][] = [];
+        for (const item of items) {
+          const last = groups[groups.length - 1];
+          if (last && Math.abs(item.y - last[0].y) <= 0.3) {
+            last.push(item);
+          } else {
+            groups.push([item]);
+          }
+        }
+
+        for (const g of groups) {
+          g.sort((a, b) => a.x - b.x);
+          rawLines.push({ y: g[0].y, text: g.map(i => i.str).join(" ") });
         }
       }
 
-      for (const g of groups) {
-        g.sort((a, b) => a.x - b.x);
-        rawLines.push({ y: g[0].y, text: g.map(i => i.str).join(" ") });
+      dbg(`Total lines (all pages): ${rawLines.length}`);
+
+      dbg("--- LINE TEXT (first 60) ---");
+      for (let i = 0; i < Math.min(60, rawLines.length); i++) {
+        const l = rawLines[i];
+        dbg(`L${i} y=${l.y.toFixed(0)} | ${l.text.slice(0, 140).replace(/\n/g, "↵")}`);
       }
-    }
+      dbg("--- END LINE TEXT ---");
 
-    dbg(`Total lines (all pages): ${rawLines.length}`);
-
-    // Debug first 60 line texts
-    dbg("--- LINE TEXT (first 60) ---");
-    for (let i = 0; i < Math.min(60, rawLines.length); i++) {
-      const l = rawLines[i];
-      dbg(`L${i} y=${l.y.toFixed(0)} | ${l.text.slice(0, 140).replace(/\n/g, "↵")}`);
-    }
-    dbg("--- END LINE TEXT ---");
-
-    // Detect year from statement header
-    let statementYear = new Date().getFullYear();
-    for (const line of rawLines) {
-      const m = line.text.match(/statement\s+(\d{2})-([A-Za-z]{3})-(\d{2,4})/i);
-      if (m) {
-        const y = parseInt(m[3]);
-        statementYear = y < 100 ? 2000 + y : y;
-        dbg(`Year: ${statementYear}`);
-        break;
+      let statementYear = new Date().getFullYear();
+      for (const line of rawLines) {
+        const m = line.text.match(/statement\s+(\d{2})-([A-Za-z]{3})-(\d{2,4})/i);
+        if (m) {
+          const y = parseInt(m[3]);
+          statementYear = y < 100 ? 2000 + y : y;
+          dbg(`Year: ${statementYear}`);
+          break;
+        }
       }
-    }
 
-    const txs = this.parseLineText(rawLines, statementYear);
-    dbg(`TXs: ${txs.length}`);
+      const txs = this.parseLineText(rawLines, statementYear);
+      dbg(`TXs: ${txs.length}`);
 
-    return this.buildResult(txs);
+      return this.buildResult(txs);
+    })();
   }
 
   private parseLineText(lines: { y: number; text: string }[], year: number): Transaction[] {
     const dateRe = /^(?:(\d{1,2})\s+|On\s+(\d{1,2})\s+)(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)/i;
     const amtSearchRe = /\d[\d,]*\.\d{2}/;
 
-    // Pass 1: build date-header index (line index → dateStr)
     const dateHeaderAtLine = new Map<number, string>();
     for (let idx = 0; idx < lines.length; idx++) {
       const text = lines[idx].text.trim();
@@ -143,12 +143,10 @@ export class BarclaysPdfProvider implements UploadProvider {
       if (!(month && day >= 1 && day <= 31)) continue;
       const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
       const afterDate = text.slice(m[0].length).trim();
-      // Skip balance/continued lines that happen to start with a date
       if (afterDate && (isNoise(afterDate) || isFooterJunk(afterDate))) continue;
       dateHeaderAtLine.set(idx, dateStr);
     }
 
-    // Pass 2: process lines with date-lookup by index
     const txs: Transaction[] = [];
     const seen = new Set<string>();
     let pendingDescParts: string[] = [];
@@ -157,7 +155,6 @@ export class BarclaysPdfProvider implements UploadProvider {
       const rawText = lines[i].text.trim();
       if (!rawText) continue;
 
-      // Find date by line index: same line → preceding lines → forward (close Y)
       let currentDateStr = "";
       if (dateHeaderAtLine.has(i)) {
         currentDateStr = dateHeaderAtLine.get(i)!;
@@ -168,7 +165,6 @@ export class BarclaysPdfProvider implements UploadProvider {
             break;
           }
         }
-        // If nothing above, look forward within close vertical proximity
         if (!currentDateStr) {
           const curY = lines[i].y;
           for (let j = i + 1; j < lines.length; j++) {
@@ -265,4 +261,13 @@ export class BarclaysPdfProvider implements UploadProvider {
       debug: debugLog.join("\n"),
     };
   }
+}
+
+async function importPdfJs(): Promise<typeof PdfJs> {
+  const pdfjsLib = await import("pdfjs-dist");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url
+  ).href;
+  return pdfjsLib;
 }

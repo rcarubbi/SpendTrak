@@ -1,17 +1,27 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import Layout from "./components/Layout";
-import Dashboard from "./pages/Dashboard";
-import Categories from "./pages/Categories";
-import Upload from "./pages/Upload";
-import Classify from "./pages/Classify";
-import Statement from "./pages/Statement";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { useCategoryStore } from "./stores/categoryStore";
 import { useTransactionStore } from "./stores/transactionStore";
 import { useBudgetStore } from "./stores/budgetStore";
 import { ensureDataDir, pickDataDir } from "./utils/fileSystem";
 
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Categories = lazy(() => import("./pages/Categories"));
+const Upload = lazy(() => import("./pages/Upload"));
+const Classify = lazy(() => import("./pages/Classify"));
+const Statement = lazy(() => import("./pages/Statement"));
+
 type AppState = "loading" | "setup" | "ready";
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
+      Carregando...
+    </div>
+  );
+}
 
 export default function App() {
   const [state, setState] = useState<AppState>("loading");
@@ -85,13 +95,17 @@ export default function App() {
   return (
     <BrowserRouter>
       <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/classify" element={<Classify />} />
-          <Route path="/statement" element={<Statement />} />
-        </Routes>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/classify" element={<Classify />} />
+              <Route path="/statement" element={<Statement />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </Layout>
     </BrowserRouter>
   );
