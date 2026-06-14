@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { MonthData, Transaction, Category } from "../types";
 import * as fs from "../utils/fileSystem";
+import { classify } from "../utils/classify";
 
 function cacheKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;
@@ -102,7 +103,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       let changed = false;
       const newTxs = monthData.transactions.map((tx) => {
         if (tx.manual) return tx;
-        const newId = classifyByKeywords(tx.description, categories);
+        const newId = classify(tx.description, categories);
         if (newId !== tx.categoryId) {
           changed = true;
           return { ...tx, categoryId: newId };
@@ -121,16 +122,6 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     if (anyChanged) set({ months: newMonths });
   },
 }));
-
-function classifyByKeywords(description: string, categories: Category[]): string {
-  const upper = description.toUpperCase();
-  for (const cat of categories) {
-    if (cat.keywords.some((k) => upper.includes(k.toUpperCase()))) {
-      return cat.id;
-    }
-  }
-  return "outros";
-}
 
 export function getAllTransactions(): Transaction[] {
   const months = useTransactionStore.getState().months;

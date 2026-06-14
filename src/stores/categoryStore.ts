@@ -58,20 +58,10 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
 }));
 
 function migrateTypes(cats: Category[]): Category[] {
-  for (const cat of cats) {
-    if (!cat.type) {
-      cat.type = cat.id === "receita" ? ("credit" as CategoryType) : ("debit" as CategoryType);
-    }
-  }
-  return cats;
+  return cats.map((cat) => {
+    if (cat.type) return cat;
+    return { ...cat, type: (cat.id === "receita" ? "credit" : "debit") as CategoryType };
+  });
 }
 
-export function classify(description: string, categories: Category[]): string {
-  const upper = description.toUpperCase();
-  for (const cat of categories) {
-    if (cat.keywords.some((k) => upper.includes(k.toUpperCase()))) {
-      return cat.id;
-    }
-  }
-  return "outros";
-}
+export { classify } from "../utils/classify";

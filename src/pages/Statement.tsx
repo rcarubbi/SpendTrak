@@ -1,12 +1,13 @@
 import { useState, useMemo, useCallback } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
-import { useTransactionStore, getLoadedMonths, loadMonthData } from "../stores/transactionStore";
+import { useTransactionStore, getLoadedMonths, loadMonthData, getPossibleDuplicates } from "../stores/transactionStore";
 import { useUIStore } from "../stores/uiStore";
 import type { Transaction } from "../types";
 import CategoryBadge from "../components/CategoryBadge";
 import DataGrid from "../components/DataGrid";
 import type { ColDef } from "ag-grid-community";
 import { catStyleTag, rowClassRules } from "../utils/styleUtils";
+import { extractKeyword } from "../utils/classify";
 
 export default function Statement() {
   const search = useUIStore((s) => s.searchQuery);
@@ -20,31 +21,14 @@ export default function Statement() {
 
   const cats = useCategoryStore((s) => s.categories);
   const months = useTransactionStore((s) => s.months);
+  const loaded = useTransactionStore((s) => s.loaded);
   const saveMonthData = useTransactionStore((s) => s.saveMonthData);
   const deleteTx = useTransactionStore((s) => s.deleteTransaction);
   const reclassifyAll = useTransactionStore((s) => s.reclassifyAll);
   const updateCategory = useCategoryStore((s) => s.updateCategory);
 
   const txs = useMemo(() => Object.values(months).flatMap((m) => m.transactions), [months]);
-  const dupGroups = useMemo(() => {
-    const groups = new Map<string, Transaction[]>();
-    for (const tx of txs) {
-      const key = `${tx.date}|${tx.description.toUpperCase()}|${tx.amount}`;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(tx);
-    }
-    return Array.from(groups.entries())
-      .filter(([, g]) => {
-        const sources = new Set(g.map((t) => t.source));
-        return sources.size > 1 || g.length > 1;
-      })
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([key, g]) => ({
-        key,
-        txs: g,
-        sources: [...new Set(g.map((t) => t.source))],
-      }));
-  }, [txs]);
+  const dupGroups = useMemo(() => getPossibleDuplicates(), [txs]);
 
   const creditCatIds = useMemo(() => new Set(cats.filter((c) => c.type === "credit").map((c) => c.id)), [cats]);
   const debitCatIds = useMemo(() => new Set(cats.filter((c) => c.type !== "credit").map((c) => c.id)), [cats]);
@@ -53,6 +37,21 @@ export default function Statement() {
 
   const debitTotal = useMemo(() => txs.reduce((s, t) => (debitCatIds.has(t.categoryId) ? s + t.amount : s), 0), [txs, debitCatIds]);
   const creditTotal = useMemo(() => txs.reduce((s, t) => (creditCatIds.has(t.categoryId) ? s + t.amount : s), 0), [txs, creditCatIds]);
+
+  const handleMergeDuplicates = useCallback(async (groupTxs: Transaction[]) => {
+    // Keep the first transaction, delete the rest
+    const [keep, ...rest] = groupTxs;
+    for (const tx of rest) {
+      for (const monthKey of getLoadedMonths()) {
+        const [year, month] = monthKey.split("-").map(Number);
+        const existing = loadMonthData(year, month);
+        if (existing?.transactions.some((t) => t.id === tx.id)) {
+          await deleteTx(year, month, tx.id);
+          break;
+        }
+      }
+    }
+  }, [deleteTx]);
 
   const handleDelete = useCallback(async (txId: string) => {
     for (const monthKey of getLoadedMonths()) {
@@ -74,10 +73,7 @@ export default function Statement() {
         if (matching.length > 0) {
           await updateCategory(oldCat.id, { keywords: oldCat.keywords.filter((k) => !matching.includes(k)) });
         }
-        const words = tx.description.split(/\s+/);
-        const stopWords = new Set(["ON", "THE", "AND", "FOR", "WITH", "LIMITED", "LTD", "LIMIT", "UK"]);
-        let keyword = words.find((w) => w.length > 3 && !stopWords.has(w.toUpperCase()));
-        if (!keyword) keyword = words[0];
+        const keyword = extractKeyword(tx.description);
         if (keyword) {
           const kw = keyword.toUpperCase();
           if (!newCat.keywords.some((k) => k.toUpperCase() === kw)) {
@@ -111,7 +107,7 @@ export default function Statement() {
     let result = [...txs];
     if (search) {
       const q = search.toUpperCase();
-      result = result.filter((tx) => tx.description.includes(q));
+      result = result.filter((tx) => tx.description.toUpperCase().includes(q));
     }
     if (catFilter !== "all") {
       result = result.filter((tx) => tx.categoryId === catFilter);
@@ -125,9 +121,31 @@ export default function Statement() {
   const tagStyle = useMemo(() => catStyleTag(cats), [cats]);
   const rowRules = useMemo(() => rowClassRules(cats), [cats]);
 
+  const handleEditDescription = useCallback(async (tx: Transaction, newDesc: string) => {
+    if (newDesc === tx.description || !newDesc.trim()) return;
+    const monthKey = tx.date.slice(0, 7);
+    const [year, month] = monthKey.split("-").map(Number);
+    const existing = loadMonthData(year, month);
+    if (existing) {
+      const updatedTx = { ...tx, description: newDesc.trim() };
+      await saveMonthData({ year, month, transactions: [updatedTx], uploadedAt: existing.uploadedAt });
+    }
+  }, [saveMonthData]);
+
   const mainColDefs: ColDef[] = [
     { field: "date", headerName: "Data", width: 110 },
-    { field: "description", headerName: "Descrição", flex: 2, minWidth: 200 },
+    {
+      field: "description", headerName: "Descrição", flex: 2, minWidth: 200,
+      cellRenderer: (p: { data: Transaction }) => (
+        <input
+          defaultValue={p.data.description}
+          onBlur={(e) => handleEditDescription(p.data, e.target.value)}
+          className="w-full bg-transparent border-none outline-none text-sm"
+          style={{ color: "inherit" }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
     {
       field: "amount", headerName: "Valor", width: 100, type: "rightAligned",
       valueFormatter: (p) => `£${p.value?.toFixed(2) ?? "0.00"}`,
@@ -140,13 +158,19 @@ export default function Statement() {
           onChange={(e) => {
             if (e.target.value !== p.data.categoryId) {
               setPendingReclass({ tx: p.data, newCategoryId: e.target.value });
+              setModalSaveKeyword(false);
               (e.target as HTMLSelectElement).value = p.data.categoryId;
             }
           }}
-          className="text-xs border border-gray-300 rounded px-1 py-0.5 w-full"
+          className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 w-full bg-transparent"
+          style={{ color: "inherit" }}
           onClick={(e) => e.stopPropagation()}
         >
-          {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {cats.map((c) => (
+            <option key={c.id} value={c.id} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+              {c.name}
+            </option>
+          ))}
         </select>
       ),
     },
@@ -161,10 +185,10 @@ export default function Statement() {
   ];
 
   return (
-    <div>
+    <div className="flex flex-col flex-1 overflow-auto">
       <style>{tagStyle}</style>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold dark:text-gray-100">
+        <h1 className="text-2xl font-bold dark:text-white">
           Extrato
           {dupGroups.length > 0 && (
             <span className="text-sm font-normal text-amber-600 ml-3">
@@ -172,7 +196,7 @@ export default function Statement() {
             </span>
           )}
         </h1>
-        <div className="text-gray-500 text-sm text-right">
+        <div className="text-gray-500 dark:text-white text-sm text-right">
           <div>Despesas: £{debitTotal.toLocaleString()}</div>
           {creditTotal > 0 && <div className="text-green-600">Receita: £{Math.round(creditTotal).toLocaleString()}</div>}
         </div>
@@ -183,12 +207,12 @@ export default function Statement() {
           placeholder="Buscar descrição..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[150px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="flex-1 min-w-[150px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 md:hidden"
         />
         <select
           value={monthFilter}
           onChange={(e) => setMonthFilter(e.target.value)}
-          className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <option value="all">Todos meses</option>
           {loadedMonths.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -196,7 +220,7 @@ export default function Statement() {
         <select
           value={catFilter}
           onChange={(e) => setCatFilter(e.target.value)}
-          className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <option value="all">Todas categorias</option>
           {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -206,7 +230,7 @@ export default function Statement() {
           className={`px-3 py-2 rounded-md text-sm font-semibold border cursor-pointer transition-colors ${
             showDuplicates
               ? "bg-amber-100 border-amber-300 text-amber-800"
-              : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+              : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
           }`}
         >
           {showDuplicates ? "⇤ Ver todas" : `⚠ Duplicatas (${dupGroups.length})`}
@@ -214,7 +238,7 @@ export default function Statement() {
         <button
           onClick={handleReclassifyAll}
           disabled={loading}
-          className="px-3 py-2 rounded-md text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer disabled:opacity-50"
+          className="px-3 py-2 rounded-md text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer disabled:opacity-50"
         >
           Reclassificar tudo
         </button>
@@ -230,15 +254,24 @@ export default function Statement() {
       {showDuplicates ? (
         <div className="flex flex-col gap-3">
           {dupGroups.length === 0 && (
-            <p className="text-center text-gray-400 mt-8">Nenhuma duplicata encontrada</p>
+            <p className="text-center text-gray-400 dark:text-white mt-8">Nenhuma duplicata encontrada</p>
           )}
           {dupGroups.map((group) => (
-            <div key={group.key} className="border border-amber-200 rounded-lg bg-amber-50 overflow-hidden">
-              <div className="px-3 py-2 bg-amber-100 text-xs font-semibold text-amber-800 border-b border-amber-200 flex justify-between">
-                <span>
+            <div key={group.key} className="border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50 dark:bg-amber-900/20 overflow-hidden">
+              <div className="px-3 py-2 bg-amber-100 dark:bg-amber-900/40 text-xs font-semibold text-amber-800 dark:text-amber-300 border-b border-amber-200 dark:border-amber-800 flex justify-between items-center">
+                <span className="truncate">
                   {group.txs[0].date} · {group.txs[0].description} · £{group.txs[0].amount.toFixed(2)}
                 </span>
-                <span>{group.txs.length} entrada(s) · {group.sources.join(", ")}</span>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                  <span>{group.txs.length} entrada(s) · {group.sources.join(", ")}</span>
+                  <button
+                    onClick={() => handleMergeDuplicates(group.txs)}
+                    className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 font-bold text-xs cursor-pointer"
+                    title="Manter esta, remover duplicatas"
+                  >
+                    ✕ Manter esta
+                  </button>
+                </div>
               </div>
               <div className="p-1">
                 <DataGrid
@@ -278,28 +311,29 @@ export default function Statement() {
         <DataGrid
           rows={filtered}
           colDefs={mainColDefs}
-          height={Math.max(200, Math.min(600, filtered.length * 36 + 50))}
           exportFilename="extrato-completo"
           rowClassRules={rowRules}
+          loading={loading || !loaded}
+          fillHeight
         />
       )}
 
       {!showDuplicates && filtered.length === 0 && (
-        <p className="text-center text-gray-400 mt-8">Nenhuma transação encontrada</p>
+        <p className="text-center text-gray-400 dark:text-white mt-8">Nenhuma transação encontrada</p>
       )}
 
       {pendingReclass && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setPendingReclass(null)}>
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-2 dark:text-gray-100">Reclassificar transação</h3>
-            <p className="text-sm text-gray-500 mb-1">{pendingReclass.tx.date}</p>
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 font-medium">{pendingReclass.tx.description.slice(0, 100)}</p>
+            <h3 className="text-lg font-bold mb-2 dark:text-white">Reclassificar transação</h3>
+            <p className="text-sm text-gray-500 dark:text-white mb-1">{pendingReclass.tx.date}</p>
+            <p className="text-sm text-gray-700 dark:text-white mb-4 font-medium">{pendingReclass.tx.description.slice(0, 100)}</p>
             <div className="flex items-center gap-2 mb-4">
               <CategoryBadge categoryId={pendingReclass.tx.categoryId} />
-              <span className="text-gray-400">→</span>
+              <span className="text-gray-400 dark:text-white">→</span>
               <CategoryBadge categoryId={pendingReclass.newCategoryId} />
             </div>
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-4 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-white mb-4 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={modalSaveKeyword}
@@ -311,7 +345,7 @@ export default function Statement() {
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setPendingReclass(null)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-white rounded-md text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 Cancelar
               </button>

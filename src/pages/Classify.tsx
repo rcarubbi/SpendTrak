@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore } from "../stores/transactionStore";
 import type { Transaction } from "../types";
+import { extractKeyword } from "../utils/classify";
 
 export default function Classify() {
   const cats = useCategoryStore((s) => s.categories);
@@ -10,6 +11,7 @@ export default function Classify() {
   const updateCategory = useCategoryStore((s) => s.updateCategory);
 
   const [oneOff, setOneOff] = useState<Record<string, boolean>>({});
+  const [showAll, setShowAll] = useState(false);
   const unknown = useMemo(
     () => Object.values(months).flatMap((m) => m.transactions).filter((tx) => tx.categoryId === "outros"),
     [months]
@@ -28,6 +30,10 @@ export default function Classify() {
     return Array.from(map.entries()).sort((a, b) => b[1].total - a[1].total);
   }, [unknown]);
 
+  const LIMIT = 50;
+  const hasMore = byDesc.length > LIMIT;
+  const visible = showAll ? byDesc : byDesc.slice(0, LIMIT);
+
   const handleClassify = useCallback(async (description: string, catId: string, saveKeyword: boolean) => {
     const entry = byDesc.find(([desc]) => desc === description);
     if (!entry || !catId) return;
@@ -36,9 +42,7 @@ export default function Classify() {
     if (!cat) return;
 
     if (saveKeyword) {
-      const words = description.replace(/\s+/g, " ").trim().split(" ");
-      const STOP = new Set(["ON", "THE", "AND", "FOR", "WITH", "LIMITED", "LTD", "LIMIT", "UK"]);
-      const keyword = words.find((w) => w.length > 3 && !STOP.has(w)) || words[0];
+      const keyword = extractKeyword(description);
       if (keyword && !cat.keywords.includes(keyword)) {
         await updateCategory(catId, { keywords: [...cat.keywords, keyword] });
       }
@@ -73,7 +77,7 @@ export default function Classify() {
       </div>
 
       <div className="flex flex-col gap-2">
-        {byDesc.slice(0, 50).map(([desc, info]) => {
+        {visible.map(([desc, info]) => {
           const isOneOff = oneOff[desc] ?? false;
           return (
             <div key={desc} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
@@ -99,14 +103,14 @@ export default function Classify() {
                   <button
                     key={cat.id}
                     onClick={() => handleClassify(desc, cat.id, !isOneOff)}
-                    className="px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border transition-colors"
+                    className="px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border transition-colors hover:text-white"
                     style={{
                       borderColor: cat.color,
                       color: cat.color,
                       background: "white",
                     }}
-                    onMouseOver={(e) => (e.currentTarget.style.background = cat.color, e.currentTarget.style.color = "white")}
-                    onMouseOut={(e) => (e.currentTarget.style.background = "white", e.currentTarget.style.color = cat.color)}
+                    onMouseOver={(e) => (e.currentTarget.style.background = cat.color)}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "white")}
                   >
                     {cat.name}
                   </button>
@@ -115,6 +119,14 @@ export default function Classify() {
             </div>
           );
         })}
+        {hasMore && !showAll && (
+          <button
+            onClick={() => setShowAll(true)}
+            className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline"
+          >
+            Mostrar todas ({byDesc.length - LIMIT} restantes)
+          </button>
+        )}
       </div>
     </div>
   );

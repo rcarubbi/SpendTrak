@@ -26,7 +26,11 @@ export default function Categories() {
 
   const handleCreate = async () => {
     const id = form.id.trim().toLowerCase().replace(/\s+/g, "_");
-    if (!id || cats.find((c) => c.id === id)) return;
+    if (!id) return;
+    if (cats.find((c) => c.id === id)) {
+      alert("Já existe uma categoria com este ID.");
+      return;
+    }
     await addCategory({ id, name: form.name || id, color: form.color, type: form.type, keywords: [] });
     setShowModal(false);
     setForm({ id: "", name: "", color: "#6366f1", type: "debit" });

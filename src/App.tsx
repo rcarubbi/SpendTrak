@@ -12,6 +12,7 @@ const Categories = lazy(() => import("./pages/Categories"));
 const Upload = lazy(() => import("./pages/Upload"));
 const Classify = lazy(() => import("./pages/Classify"));
 const Statement = lazy(() => import("./pages/Statement"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 type AppState = "loading" | "setup" | "ready";
 
@@ -93,9 +94,9 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Layout>
-        <ErrorBoundary>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Layout>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -103,10 +104,11 @@ export default function App() {
               <Route path="/upload" element={<Upload />} />
               <Route path="/classify" element={<Classify />} />
               <Route path="/statement" element={<Statement />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-        </ErrorBoundary>
-      </Layout>
-    </BrowserRouter>
+        </Layout>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

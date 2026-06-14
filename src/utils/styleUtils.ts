@@ -12,7 +12,9 @@ export function catStyleTag(cats: Category[]): string {
     const r = parseInt(cat.color.slice(1, 3), 16);
     const g = parseInt(cat.color.slice(3, 5), 16);
     const b = parseInt(cat.color.slice(5, 7), 16);
-    return `.ag-row-cat-${cat.id}{background-color:rgba(${r},${g},${b},0.12)!important}`;
+    const light = `rgba(${r},${g},${b},0.12)`;
+    const dark = `rgba(${r},${g},${b},0.25)`;
+    return `.ag-row-cat-${cat.id}{background-color:${light}!important}.dark .ag-row-cat-${cat.id}{background-color:${dark}!important}`;
   }).join("");
 }
 
@@ -24,10 +26,4 @@ export function rowClassRules(cats: Category[]): Record<string, (params: { data:
   return rules;
 }
 
-export function extractKeyword(desc: string): string {
-  const words = desc.split(/\s+/);
-  const stopWords = new Set(["ON", "THE", "AND", "FOR", "WITH", "LIMITED", "LTD", "LIMIT", "UK"]);
-  let kw = words.find(w => w.length > 3 && !stopWords.has(w.toUpperCase()));
-  if (!kw) kw = words[0];
-  return kw.toUpperCase();
-}
+

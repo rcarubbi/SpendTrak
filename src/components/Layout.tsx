@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom";
-import type { ReactNode } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useState, useRef, type ReactNode } from "react";
 import { useUIStore } from "../stores/uiStore";
 
 const links: [string, string][] = [
@@ -17,6 +17,22 @@ export default function Layout({ children }: { children: ReactNode }) {
   const setTheme = useUIStore((s) => s.setTheme);
   const searchQuery = useUIStore((s) => s.searchQuery);
   const setSearchQuery = useUIStore((s) => s.setSearchQuery);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [input, setInput] = useState(searchQuery);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInput(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(val);
+      if (location.pathname !== "/statement") {
+        navigate("/statement");
+      }
+    }, 200);
+  };
 
   const cycleTheme = () => {
     const next: Record<string, "light" | "dark" | "system"> = {
@@ -91,7 +107,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <h2 className="font-bold text-gray-800 dark:text-gray-200 shrink-0 hidden md:block">Gastos</h2>
           <input
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             placeholder="Buscar transações..."
             className="flex-1 max-w-md px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
@@ -104,17 +120,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           </button>
         </div>
 
-        <div className="p-6 overflow-auto">{children}</div>
+        <div className="p-6 overflow-auto flex flex-col flex-1">{children}</div>
       </main>
-
-      {/* Theme toggle (desktop) */}
-      <button
-        onClick={cycleTheme}
-        className="fixed bottom-4 right-4 z-30 w-10 h-10 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-lg cursor-pointer hover:shadow-xl transition-shadow"
-        aria-label="Alternar tema"
-      >
-        {themeIcon}
-      </button>
     </div>
   );
 }

@@ -1,34 +1,41 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef, GridReadyEvent } from "ag-grid-community";
-import { ModuleRegistry } from "ag-grid-community";
+import { ModuleRegistry, themeQuartz } from "ag-grid-community";
 import { ClientSideRowModelModule } from "ag-grid-community";
 import { CsvExportModule } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
-
 import { RowStyleModule } from "ag-grid-community";
+
 import { useUIStore } from "../stores/uiStore";
 
 ModuleRegistry.registerModules([ClientSideRowModelModule, CsvExportModule, RowStyleModule]);
 
-const darkGridVars = `
-  --ag-background-color: #1f2937;
-  --ag-foreground-color: #d1d5db;
-  --ag-border-color: #374151;
-  --ag-secondary-border-color: #4b5563;
-  --ag-header-background-color: #111827;
-  --ag-header-foreground-color: #9ca3af;
-  --ag-tooltip-background-color: #1f2937;
-  --ag-odd-row-background-color: #1a2332;
-  --ag-control-panel-background-color: #1f2937;
-  --ag-subheader-background-color: #111827;
-  --ag-input-disabled-background-color: #374151;
-  --ag-disabled-foreground-color: rgba(209, 213, 219, 0.5);
-  --ag-chip-background-color: rgba(209, 213, 219, 0.07);
-  --ag-input-disabled-border-color: rgba(55, 65, 81, 0.3);
-  --ag-input-disabled-background-color: rgba(55, 65, 81, 0.15);
-`;
+const myTheme = themeQuartz
+  .withParams(
+    {
+      backgroundColor: "#ffffff",
+      foregroundColor: "#000000",
+      headerBackgroundColor: "#ffffff",
+      borderColor: "#e0e0e0",
+      oddRowBackgroundColor: "#f8f9fa",
+      rowHoverColor: "#f0f4f8",
+      browserColorScheme: "light",
+    },
+    "light"
+  )
+  .withParams(
+    {
+      backgroundColor: "#0a0f1a",
+      foregroundColor: "#ffffff",
+      headerBackgroundColor: "#0a0f1a",
+      headerTextColor: "#ffffff",
+      borderColor: "#1e293b",
+      oddRowBackgroundColor: "#060b14",
+      rowHoverColor: "#1e293b",
+      browserColorScheme: "dark",
+    },
+    "dark"
+  );
 
 interface Props {
   rows: unknown[];
@@ -37,16 +44,21 @@ interface Props {
   exportFilename?: string;
   additionalButtons?: React.ReactNode;
   rowClassRules?: Record<string, (params: { data: unknown }) => boolean>;
+  loading?: boolean;
+  fillHeight?: boolean;
 }
 
-export default function DataGrid({ rows, colDefs, height = 400, exportFilename = "export", additionalButtons, rowClassRules }: Props) {
+export default function DataGrid({ rows, colDefs, height = 400, exportFilename = "export", additionalButtons, rowClassRules, loading, fillHeight }: Props) {
   const gridRef = useRef<AgGridReact>(null);
-  const theme = useUIStore((s) => s.theme);
-  const isDark = useMemo(() => {
-    if (theme === "dark") return true;
-    if (theme === "light") return false;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-  }, [theme]);
+  const gridReadyRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDark = useUIStore((s) => s.theme === "dark" || (s.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches));
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.dataset.agThemeMode = isDark ? "dark" : "light";
+  }, [isDark]);
 
   const handleExport = () => {
     gridRef.current?.api.exportDataAsCsv({
@@ -61,10 +73,14 @@ export default function DataGrid({ rows, colDefs, height = 400, exportFilename =
     });
   };
 
+  const onGridReady = (params: GridReadyEvent) => {
+    gridReadyRef.current = true;
+    params.api.sizeColumnsToFit();
+  };
+
   return (
-    <div>
-      {isDark && <style>{`.ag-theme-alpine-dark { ${darkGridVars} }`}</style>}
-      <div className="flex justify-end gap-2 mb-2">
+    <div className={fillHeight ? "flex flex-col min-h-0 flex-1" : undefined}>
+      <div className="flex justify-end gap-2 mb-2 shrink-0">
         {additionalButtons}
         <button
           onClick={handleExport}
@@ -73,9 +89,14 @@ export default function DataGrid({ rows, colDefs, height = 400, exportFilename =
           Export CSV
         </button>
       </div>
-      <div className={isDark ? "ag-theme-alpine-dark" : "ag-theme-alpine"} style={{ height, width: "100%" }}>
+      <div
+        ref={containerRef}
+        className={fillHeight ? "min-h-0 flex-1" : undefined}
+        style={fillHeight ? undefined : { height, width: "100%" }}
+      >
         <AgGridReact
           ref={gridRef}
+          theme={myTheme}
           rowData={rows}
           columnDefs={colDefs}
           defaultColDef={{
@@ -85,10 +106,11 @@ export default function DataGrid({ rows, colDefs, height = 400, exportFilename =
             flex: 1,
             minWidth: 80,
           }}
-          onGridReady={(params: GridReadyEvent) => params.api.sizeColumnsToFit()}
-          domLayout="autoHeight"
+          onGridReady={onGridReady}
+          domLayout="normal"
           suppressMenuHide
           rowClassRules={rowClassRules}
+          loading={loading}
         />
       </div>
     </div>

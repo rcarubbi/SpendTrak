@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore } from "../stores/transactionStore";
@@ -35,7 +35,11 @@ export default function Dashboard() {
 
   const [selectedMonth, setSelectedMonth] = useState("");
 
-  // WARN: missing useEffect for default month — add when months change
+  useEffect(() => {
+    if (selectedMonth && !monthsInYear.includes(selectedMonth)) {
+      setSelectedMonth("");
+    }
+  }, [monthsInYear, selectedMonth]);
 
   const yearDebit = useMemo(() => {
     const agg = new Map<string, number>();

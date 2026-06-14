@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useCategoryStore, classify } from "../stores/categoryStore";
+import { useCategoryStore } from "../stores/categoryStore";
+import { classify } from "../utils/classify";
 import { useTransactionStore } from "../stores/transactionStore";
 import type { Transaction } from "../types";
 import CategoryBadge from "../components/CategoryBadge";
@@ -22,6 +23,7 @@ export default function Upload() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [debug, setDebug] = useState("");
+  const [dragging, setDragging] = useState(false);
 
   const cats = useCategoryStore((s) => s.categories);
   const months = useTransactionStore((s) => s.months);
@@ -29,9 +31,8 @@ export default function Upload() {
 
   const providers = getProviders();
 
-  const handleParse = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const processFiles = useCallback(async (files: FileList) => {
+    if (files.length === 0) return;
 
     setStatus(`Lendo ${files.length} arquivo(s)...`);
     setLoading(true);
@@ -103,8 +104,32 @@ export default function Upload() {
     }
 
     setLoading(false);
+    setDragging(false);
     if (fileRef.current) fileRef.current.value = "";
   }, [selectedProvider, cats, providers]);
+
+  const handleParse = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) processFiles(e.target.files);
+  }, [processFiles]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    if (e.dataTransfer.files.length > 0) processFiles(e.dataTransfer.files);
+  }, [processFiles]);
 
   const handleConfirm = useCallback(async () => {
     if (!pending) return;
@@ -167,6 +192,17 @@ export default function Upload() {
   const tagStyle = useMemo(() => catStyleTag(cats), [cats]);
   const uploadRowClassRules = useMemo(() => rowClassRules(cats), [cats]);
 
+  const pendingDuplicates = useMemo(() => {
+    if (!pending) return [];
+    const existingTxs = Object.values(months).flatMap((m) => m.transactions);
+    const existingKeys = new Set(
+      existingTxs.map((tx) => `${tx.date}|${tx.description.toUpperCase()}|${tx.amount}`)
+    );
+    return pending.transactions.filter((tx) =>
+      existingKeys.has(`${tx.date}|${tx.description.toUpperCase()}|${tx.amount}`)
+    );
+  }, [pending, months]);
+
   return (
     <div>
       <style>{tagStyle}</style>
@@ -189,9 +225,18 @@ export default function Upload() {
         </select>
       </div>
 
-      <label className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-10 text-center bg-white dark:bg-gray-800 mb-6 block cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+      <label
+        className={`border-2 border-dashed rounded-xl p-10 text-center mb-6 block cursor-pointer transition-colors ${
+          dragging
+            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500"
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <p className="text-base text-gray-500 dark:text-gray-400 mb-3">
-          Arraste arquivos ou clique para selecionar
+          {dragging ? "Solte os arquivos aqui" : "Arraste arquivos ou clique para selecionar"}
         </p>
         <span className="inline-block px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors">
           Selecionar arquivos
@@ -248,6 +293,12 @@ export default function Upload() {
               <span key={m} className="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-xs font-medium dark:text-blue-200">{m}</span>
             ))}
           </div>
+
+          {pendingDuplicates.length > 0 && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-4 text-sm font-semibold bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300">
+              ⚠ {pendingDuplicates.length} transação(ões) já existente(s) nos dados carregados
+            </div>
+          )}
 
           <DataGrid
             rows={pending.transactions}
