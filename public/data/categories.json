@@ -4,57 +4,28 @@
     "name": "Housing",
     "color": "#dc2626",
     "type": "debit",
-    "keywords": [
-      "TV LICENCE",
-      "YOUR-MOVECOUK",
-      "L B HAVERING",
-      "ESW WATER",
-      "E.ON",
-      "SCOTTISHPOWER",
-      "HYPEROPTIC"
-    ]
+    "keywords": []
   },
   {
     "id": "education",
     "name": "Education",
     "color": "#65a30d",
     "type": "debit",
-    "keywords": [
-      "LA DANCE STUDIO",
-      "STAGES PERFORMERS",
-      "EXPLORE LEARNING"
-    ]
+    "keywords": []
   },
   {
     "id": "supermarket",
     "name": "Supermarket",
     "color": "#16a34a",
     "type": "debit",
-    "keywords": [
-      "SAINSBURYS",
-      "MARKS&SPENCER"
-    ]
+    "keywords": []
   },
   {
     "id": "restaurants",
     "name": "Restaurants & Delivery",
     "color": "#ea580c",
     "type": "debit",
-    "keywords": [
-      "MCDONALDS",
-      "ITSU",
-      "WAGAMAMA",
-      "LANDSEC",
-      "NAKED CHIPS",
-      "WASABI",
-      "THE RANGE",
-      "DELIVEROO",
-      "COFF33",
-      "BOBATIGERS",
-      "NANDOS",
-      "LINDT",
-      "KASPAS"
-    ]
+    "keywords": []
   },
   {
     "id": "services",
@@ -68,21 +39,14 @@
     "name": "Transport",
     "color": "#7c3aed",
     "type": "debit",
-    "keywords": [
-      "TFL TRAVEL",
-      "UBER *TRIP"
-    ]
+    "keywords": []
   },
   {
     "id": "health",
     "name": "Health & Pharmacy",
     "color": "#0891b2",
     "type": "debit",
-    "keywords": [
-      "TABEO",
-      "BOOTS",
-      "SUPERDRUG"
-    ]
+    "keywords": []
   },
   {
     "id": "shopping",
@@ -96,11 +60,7 @@
     "name": "Leisure & Travel",
     "color": "#db2777",
     "type": "debit",
-    "keywords": [
-      "VUE CINEMAS",
-      "SMYTHS TOYS",
-      "VUE ENTERTAINMENT"
-    ]
+    "keywords": []
   },
   {
     "id": "transfers",
