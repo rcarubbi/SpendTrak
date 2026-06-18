@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useTransition } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore, getLoadedMonths, loadMonthData, getPossibleDuplicates } from "../stores/transactionStore";
 import { useUIStore } from "../stores/uiStore";
@@ -22,8 +22,6 @@ export default function Statement() {
   const [catFilter, setCatFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [showDuplicates, setShowDuplicates] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [reclassProgress, setReclassProgress] = useState<{ done: number; total: number } | null>(null);
   const [pendingReclass, setPendingReclass] = useState<{ tx: Transaction; newCategoryId: string } | null>(null);
   const [customKeyword, setCustomKeyword] = useState("");
   const [saveKeywordRule, setSaveKeywordRule] = useState(true);
@@ -42,9 +40,6 @@ export default function Statement() {
   const debitCatIds = useMemo(() => new Set(cats.filter((c) => c.type !== "credit").map((c) => c.id)), [cats]);
 
   const loadedMonths = useMemo(() => Object.keys(months).toSorted(), [months]);
-
-  const debitTotal = useMemo(() => txs.reduce((s, t) => (debitCatIds.has(t.categoryId) ? s + t.amount : s), 0), [txs, debitCatIds]);
-  const creditTotal = useMemo(() => txs.reduce((s, t) => (creditCatIds.has(t.categoryId) ? s + t.amount : s), 0), [txs, creditCatIds]);
 
   const handleMergeDuplicates = useCallback(async (groupTxs: Transaction[]) => {
     const [, ...rest] = groupTxs;
@@ -154,26 +149,6 @@ export default function Statement() {
     }
   }, [pendingReclass, customKeyword, saveKeywordRule, handleReclassify]);
 
-  const handleReclassifyAll = useCallback(() => {
-    const store = useTransactionStore.getState();
-    const reclassify = store.reclassifyAll;
-    const categories = useCategoryStore.getState().categories;
-    
-    startTransition(async () => {
-      setReclassProgress({ done: 0, total: 0 });
-      try {
-        await reclassify(categories, (done, total) => {
-          setReclassProgress({ done, total });
-        });
-        toastSuccess("Reclassification complete");
-      } catch (err) {
-        toastError("Reclassification failed", err instanceof Error ? err.stack : String(err));
-      } finally {
-        setReclassProgress(null);
-      }
-    });
-  }, []);
-
   const filtered = useMemo(() => {
     let result = [...txs];
     if (search) {
@@ -188,6 +163,9 @@ export default function Statement() {
     }
     return result;
   }, [txs, search, catFilter, monthFilter]);
+
+  const debitTotal = useMemo(() => filtered.reduce((s, t) => (debitCatIds.has(t.categoryId) ? s + t.amount : s), 0), [filtered, debitCatIds]);
+  const creditTotal = useMemo(() => filtered.reduce((s, t) => (creditCatIds.has(t.categoryId) ? s + t.amount : s), 0), [filtered, creditCatIds]);
 
   const tagStyle = useMemo(() => catStyleTag(cats), [cats]);
   const rowRules = useMemo(() => rowClassRules(cats), [cats]);
@@ -259,9 +237,6 @@ export default function Statement() {
         showDuplicates={showDuplicates}
         onToggleDuplicates={() => setShowDuplicates((d) => !d)}
         dupCount={dupGroups.length}
-        onReclassifyAll={handleReclassifyAll}
-        reclassLoading={isPending}
-        reclassProgress={reclassProgress}
       />
 
       {showDuplicates ? (
@@ -277,7 +252,7 @@ export default function Statement() {
           colDefs={mainColDefs}
           exportFilename="full-statement"
           rowClassRules={rowRules}
-          loading={isPending || !loaded}
+          loading={!loaded}
           fillHeight
         />
       )}

@@ -3,6 +3,7 @@ import type { Category, CategoryType } from "../types";
 import * as fs from "../utils/fileSystem";
 import { CATEGORY_IDS, KNOWN_CREDIT_IDS } from "../constants";
 import { toastSuccess, toastError } from "./toastStore";
+import { useTransactionStore } from "./transactionStore";
 
 interface CategoryState {
   categories: Category[];
@@ -50,6 +51,13 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   updateCategory: async (id, updates) => {
     const idx = get().categories.findIndex((c) => c.id === id);
     if (idx < 0) { toastError(`Category "${id}" not found`); return; }
+    const oldCat = get().categories[idx];
+
+    const keywordsChanged =
+      updates.keywords !== undefined &&
+      (updates.keywords.length !== oldCat.keywords.length ||
+        updates.keywords.some((k, i) => k !== oldCat.keywords[i]));
+
     const next = [...get().categories];
     next[idx] = { ...next[idx], ...updates };
     set({ categories: next });
@@ -57,6 +65,12 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
       await fs.writeJSON("categories.json", next);
     } catch (err) {
       toastError(`Failed to save category "${next[idx].name}"`, err instanceof Error ? err.stack : String(err));
+    }
+
+    if (keywordsChanged) {
+      useTransactionStore.getState().reclassifyAll(next).catch((err) => {
+        toastError("Auto-reclassification failed", err instanceof Error ? err.stack : String(err));
+      });
     }
   },
 

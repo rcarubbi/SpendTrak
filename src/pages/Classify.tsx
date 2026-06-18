@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useTransition } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore } from "../stores/transactionStore";
 import { toastSuccess, toastError } from "../stores/toastStore";
@@ -16,8 +16,6 @@ export default function Classify() {
   const [oneOff, setOneOff] = useState<Record<string, boolean>>({});
   const [customKeywords, setCustomKeywords] = useState<Record<string, string>>({});
   const [showAll, setShowAll] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [reclassProgress, setReclassProgress] = useState<{ done: number; total: number } | null>(null);
   const unknown = useMemo(
     () => Object.values(months).flatMap((m) => m.transactions).filter((tx) => tx.categoryId === CATEGORY_IDS.OTHER),
     [months]
@@ -85,28 +83,6 @@ export default function Classify() {
     }
   }, [byDesc, cats, updateCategory, doSaveMonthData, customKeywords]);
 
-  const handleReclassifyAll = useCallback(() => {
-    const store = useTransactionStore.getState();
-    const reclassify = store.reclassifyAll;
-    const categories = useCategoryStore.getState().categories;
-    
-    startTransition(async () => {
-      setReclassProgress({ done: 0, total: 0 });
-      try {
-        await reclassify(categories, (done, total) => {
-          setReclassProgress({ done, total });
-        });
-        setOneOff({});
-        setCustomKeywords({});
-        toastSuccess("Reclassification complete");
-      } catch (err) {
-        toastError("Reclassification failed", err instanceof Error ? err.stack : String(err));
-      } finally {
-        setReclassProgress(null);
-      }
-    });
-  }, []);
-
   if (unknown.length === 0) {
     return (
       <div>
@@ -118,15 +94,7 @@ export default function Classify() {
 
   return (
     <div>
-      <ClassifyHeader unknownCount={unknown.length} loading={isPending} onReclassifyAll={handleReclassifyAll} />
-      {isPending && (
-        <div className="flex items-center gap-2 mb-4 text-sm text-blue-700">
-          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
-          {reclassProgress
-            ? `Reclassifying... ${reclassProgress.done}/${reclassProgress.total}`
-            : "Reclassifying transactions..."}
-        </div>
-      )}
+      <ClassifyHeader unknownCount={unknown.length} />
 
       <div className="flex flex-col gap-2">
         {visible.map(([desc, info]) => (

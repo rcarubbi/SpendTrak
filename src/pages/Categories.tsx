@@ -5,6 +5,7 @@ import type { CategoryType } from "../types";
 import CategoryCard from "../components/CategoryCard";
 import CategoryFormModal from "../components/CategoryFormModal";
 import KeywordModal from "../components/KeywordModal";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Categories() {
   const cats = useCategoryStore((s) => s.categories);
@@ -15,6 +16,7 @@ export default function Categories() {
   const [showModal, setShowModal] = useState(false);
   const [showKeywordModal, setShowKeywordModal] = useState(false);
   const [keywordCategoryId, setKeywordCategoryId] = useState("");
+  const [confirmAction, setConfirmAction] = useState<{ type: "delete-category"; id: string; name: string } | { type: "delete-keyword"; catId: string; kw: string; name: string } | null>(null);
 
   const handleEditName = async (id: string, name: string) => {
     await updateCategory(id, { name });
@@ -31,11 +33,10 @@ export default function Categories() {
     toastSuccess("Type updated");
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const cat = cats.find((c) => c.id === id);
     if (!cat) return;
-    if (!confirm(`Delete category "${cat.name}"?`)) return;
-    await deleteCategory(id);
+    setConfirmAction({ type: "delete-category", id, name: cat.name });
   };
 
   const handleAddKeyword = (catId: string) => {
@@ -43,17 +44,37 @@ export default function Categories() {
     setShowKeywordModal(true);
   };
 
-  const handleRemoveKeyword = async (catId: string, kw: string) => {
-    const cat = cats.find((c) => c.id === catId);
-    if (!cat) return;
-    await updateCategory(catId, { keywords: cat.keywords.filter((k) => k !== kw) });
-    toastSuccess(`Keyword "${kw}" removed`);
+  const handleRemoveKeyword = (catId: string, kw: string) => {
+    setConfirmAction({ type: "delete-keyword", catId, kw, name: kw });
+  };
+
+  const handleConfirmDelete = async () => {
+    const action = confirmAction;
+    setConfirmAction(null);
+    if (!action) return;
+    if (action.type === "delete-category") {
+      await deleteCategory(action.id);
+    } else {
+      const cat = cats.find((c) => c.id === action.catId);
+      if (cat) {
+        await updateCategory(action.catId, { keywords: cat.keywords.filter((k) => k !== action.kw) });
+        toastSuccess(`Keyword "${action.kw}" removed`);
+      }
+    }
   };
 
   const handleFinishEdit = (id: string, name: string) => {
     handleEditName(id, name);
     setEditing(null);
   };
+
+  const confirmTitle = confirmAction?.type === "delete-category"
+    ? `Delete category "${confirmAction.name}"?`
+    : `Delete keyword "${confirmAction?.name}"?`;
+
+  const confirmMessage = confirmAction?.type === "delete-category"
+    ? "All transactions assigned to this category will be reclassified."
+    : "Remove this keyword from the category.";
 
   return (
     <div>
@@ -94,6 +115,16 @@ export default function Categories() {
           setShowKeywordModal(false);
           setKeywordCategoryId("");
         }}
+      />
+
+      <ConfirmModal
+        show={confirmAction !== null}
+        title={confirmTitle}
+        message={confirmMessage}
+        confirmLabel={confirmAction?.type === "delete-category" ? "Delete" : "Remove"}
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmAction(null)}
       />
     </div>
   );
