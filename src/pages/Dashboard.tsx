@@ -1,8 +1,16 @@
 import { useState, useMemo, useEffect } from "react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore } from "../stores/transactionStore";
 import { useUIStore } from "../stores/uiStore";
+import YearMonthFilter from "../components/YearMonthFilter";
+import PieChartCard from "../components/PieChartCard";
+import MonthlyBarChartCard from "../components/MonthlyBarChartCard";
+
+const MONTH_LABELS: Record<string, string> = {
+  "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
+  "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
+  "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec",
+};
 
 export default function Dashboard() {
   const cats = useCategoryStore((s) => s.categories);
@@ -20,17 +28,17 @@ export default function Dashboard() {
 
   const years = useMemo(() => {
     const s = new Set(txs.map((t) => t.date.slice(0, 4)));
-    return Array.from(s).sort();
+    return Array.from(s).toSorted();
   }, [txs]);
 
-  const [selectedYear, setSelectedYear] = useState(years[years.length - 1] || String(new Date().getFullYear()));
+  const [selectedYear, setSelectedYear] = useState(() => years[years.length - 1] || String(new Date().getFullYear()));
 
   const monthsInYear = useMemo(() => {
     const s = new Set<string>();
     for (const tx of txs) {
       if (tx.date.startsWith(selectedYear)) s.add(tx.date.slice(0, 7));
     }
-    return Array.from(s).sort();
+    return Array.from(s).toSorted();
   }, [txs, selectedYear]);
 
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -131,93 +139,48 @@ export default function Dashboard() {
     return m;
   }, [cats]);
 
-  const renderLabel = ({ name, percent }: { name?: string; percent?: number }) =>
-    `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`;
-
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1 dark:text-gray-100">Dashboard</h1>
       <p className="text-gray-500 dark:text-gray-400 mb-6">{txs.length} transactions loaded</p>
 
-      <div className="flex gap-3 items-center mb-6">
-        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Year:</label>
-        <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm">
-          {years.map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <label className="text-sm font-medium text-gray-600 dark:text-gray-400 ml-2">Month:</label>
-        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm">
-          {monthsInYear.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
-      </div>
+      <YearMonthFilter
+        years={years}
+        selectedYear={selectedYear}
+        onYearChange={setSelectedYear}
+        monthsInYear={monthsInYear}
+        selectedMonth={selectedMonth}
+        onMonthChange={setSelectedMonth}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-lg font-semibold dark:text-gray-100">{selectedYear}</p>
-            <div className="text-right text-sm">
-              {yearCredit > 0 && <p className="text-emerald-600 font-semibold">Income: £{Math.round(yearCredit).toLocaleString()}</p>}
-              <p className="text-gray-500">Expenses: £{totalYear.toLocaleString()}</p>
-            </div>
-          </div>
-          {yearDebit.length > 0 ? (
-            <ResponsiveContainer width="100%" height={380}>
-              <PieChart>
-                <Pie data={yearDebit} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={140} label={renderLabel} stroke={isDark ? "#374151" : "#fff"} strokeWidth={1}>
-                  {yearDebit.map((entry, i) => <Cell key={i} fill={catColorMap.get(entry.name) ?? "#6b7280"} />)}
-                </Pie>
-                <Tooltip
-                  contentStyle={isDark ? { backgroundColor: "#1f2937", border: "1px solid #374151", color: "#d1d5db" } : undefined}
-                  formatter={(v: unknown) => `£${(Number(v) || 0).toLocaleString()}`}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : <p className="text-gray-400 py-8 text-center">No data</p>}
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-lg font-semibold dark:text-gray-100">{selectedMonth || "Select a month"}</p>
-            <div className="text-right text-sm">
-              {monthCredit > 0 && <p className="text-emerald-600 font-semibold">Income: £{Math.round(monthCredit).toLocaleString()}</p>}
-              <p className="text-gray-500">Expenses: £{totalMonth.toLocaleString()}</p>
-            </div>
-          </div>
-          {monthDebit.length > 0 ? (
-            <ResponsiveContainer width="100%" height={380}>
-              <PieChart>
-                <Pie data={monthDebit} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={140} label={renderLabel} stroke={isDark ? "#374151" : "#fff"} strokeWidth={1}>
-                  {monthDebit.map((entry, i) => <Cell key={i} fill={catColorMap.get(entry.name) ?? "#6b7280"} />)}
-                </Pie>
-                <Tooltip
-                  contentStyle={isDark ? { backgroundColor: "#1f2937", border: "1px solid #374151", color: "#d1d5db" } : undefined}
-                  formatter={(v: unknown) => `£${(Number(v) || 0).toLocaleString()}`}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : <p className="text-gray-400 py-8 text-center">Select a month</p>}
-        </div>
+        <PieChartCard
+          title={selectedYear}
+          data={yearDebit}
+          total={totalYear}
+          income={yearCredit}
+          catColorMap={catColorMap}
+          isDark={isDark}
+          emptyText="No data"
+        />
+        <PieChartCard
+          title={selectedMonth || "Select a month"}
+          data={monthDebit}
+          total={totalMonth}
+          income={monthCredit}
+          catColorMap={catColorMap}
+          isDark={isDark}
+          emptyText="Select a month"
+        />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
-        <p className="text-lg font-semibold mb-4 dark:text-gray-100">Monthly expenses — {selectedYear}</p>
-        {fullBarData.length > 0 && catNames.length > 0 ? (
-          <ResponsiveContainer width="100%" height={380}>
-            <BarChart data={fullBarData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#374151" : "#e5e7eb"} />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke={isDark ? "#6b7280" : "#9ca3af"} />
-              <YAxis tick={{ fontSize: 12 }} stroke={isDark ? "#6b7280" : "#9ca3af"} tickFormatter={(v: unknown) => `£${Number(v)}`} />
-              <Tooltip
-                contentStyle={isDark ? { backgroundColor: "#1f2937", border: "1px solid #374151", color: "#d1d5db" } : undefined}
-                formatter={(v: unknown) => `£${(Number(v) || 0).toLocaleString()}`}
-              />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              {catNames.map((name) => (
-                <Bar key={name} dataKey={name} stackId="a" fill={catColorMap.get(name) ?? "#6b7280"} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        ) : <p className="text-gray-400 py-8 text-center">Sem dados</p>}
-      </div>
+      <MonthlyBarChartCard
+        year={selectedYear}
+        data={fullBarData}
+        catNames={catNames}
+        catColorMap={catColorMap}
+        isDark={isDark}
+      />
     </div>
   );
 }

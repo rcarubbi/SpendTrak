@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+const THEME_KEY = "theme:v1";
+
 type Theme = "light" | "dark" | "system";
 
 interface UIState {
@@ -11,8 +13,27 @@ interface UIState {
   setSearchQuery: (query: string) => void;
 }
 
+function readStorage(key: string): string | null {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function writeStorage(key: string, value: string): void {
+  try { localStorage.setItem(key, value); } catch { /* quota exceeded or denied */ }
+}
+
+function migrateLegacyTheme(): void {
+  try {
+    const legacy = localStorage.getItem("theme");
+    if (legacy && !localStorage.getItem(THEME_KEY)) {
+      writeStorage(THEME_KEY, legacy);
+      localStorage.removeItem("theme");
+    }
+  } catch { /* skip migration */ }
+}
+
 function getInitialTheme(): Theme {
-  const stored = localStorage.getItem("theme") as Theme | null;
+  migrateLegacyTheme();
+  const stored = readStorage(THEME_KEY) as Theme | null;
   return stored ?? "system";
 }
 
@@ -29,7 +50,7 @@ export const useUIStore = create<UIState>((set) => ({
   searchQuery: "",
 
   setTheme: (theme) => {
-    localStorage.setItem("theme", theme);
+    writeStorage(THEME_KEY, theme);
     applyTheme(theme);
     set({ theme });
   },

@@ -4,14 +4,14 @@ import { useTransactionStore } from "../stores/transactionStore";
 import type { Transaction } from "../types";
 import { extractKeyword } from "../utils/classify";
 import { CATEGORY_IDS } from "../constants";
+import ClassifyHeader from "../components/ClassifyHeader";
+import ClassifyCard from "../components/ClassifyCard";
 
 export default function Classify() {
   const cats = useCategoryStore((s) => s.categories);
   const months = useTransactionStore((s) => s.months);
   const doSaveMonthData = useTransactionStore((s) => s.saveMonthData);
   const updateCategory = useCategoryStore((s) => s.updateCategory);
-  const reclassifyAll = useTransactionStore((s) => s.reclassifyAll);
-
   const [oneOff, setOneOff] = useState<Record<string, boolean>>({});
   const [customKeywords, setCustomKeywords] = useState<Record<string, string>>({});
   const [showAll, setShowAll] = useState(false);
@@ -38,6 +38,11 @@ export default function Classify() {
   const LIMIT = 50;
   const hasMore = byDesc.length > LIMIT;
   const visible = showAll ? byDesc : byDesc.slice(0, LIMIT);
+
+  const classifyCats = useMemo(
+    () => cats.filter((c) => c.id !== CATEGORY_IDS.OTHER && c.id !== CATEGORY_IDS.INCOME),
+    [cats]
+  );
 
   const handleClassify = useCallback(async (description: string, catId: string, saveKeyword: boolean) => {
     const entry = byDesc.find(([desc]) => desc === description);
@@ -109,16 +114,7 @@ export default function Classify() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold dark:text-gray-100">Classify ({unknown.length})</h1>
-        <button
-          onClick={handleReclassifyAll}
-          disabled={loading}
-          className="px-3 py-2 rounded-md text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer disabled:opacity-50"
-        >
-          Reclassify all
-        </button>
-      </div>
+      <ClassifyHeader unknownCount={unknown.length} loading={loading} onReclassifyAll={handleReclassifyAll} />
       {loading && (
         <div className="flex items-center gap-2 mb-4 text-sm text-blue-700">
           <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
@@ -129,64 +125,20 @@ export default function Classify() {
       )}
 
       <div className="flex flex-col gap-2">
-        {visible.map(([desc, info]) => {
-          const isOneOff = oneOff[desc] ?? false;
-          return (
-            <div key={desc} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
-              <div className="flex items-start mb-2 gap-2">
-                <div className="flex-1 min-w-0">
-                  <code className="text-xs text-gray-700 dark:text-gray-300 break-all">{desc}</code>
-                  <span className="text-gray-400 dark:text-gray-500 text-xs ml-2 whitespace-nowrap">
-                    {info.count}x · £{info.total.toFixed(2)}
-                  </span>
-                </div>
-                <label className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap shrink-0 cursor-pointer select-none">
-                  <input
-                    id={`auto-checkbox-${desc}`}
-                    name={`auto-${desc}`}
-                    type="checkbox"
-                    checked={!isOneOff}
-                    onChange={() => setOneOff((prev) => ({ ...prev, [desc]: !prev[desc] }))}
-                    className="w-3.5 h-3.5"
-                  />
-                  Auto (save rule)
-                </label>
-               </div>
-               {!isOneOff && (
-                 <>
-                   <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Keyword (used to classify similar)</label>
-                   <input
-                     id={`keyword-input-${desc}`}
-                     name={`keyword-${desc}`}
-                     type="text"
-                     value={customKeywords[desc] ?? ""}
-                     onChange={(e) => setCustomKeywords((prev) => ({ ...prev, [desc]: e.target.value }))}
-                     placeholder={extractKeyword(desc) || "e.g. MERCADO"}
-                     className="w-full mb-2 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                   />
-                 </>
-               )}
-              <div className="flex gap-1 flex-wrap">
-                {cats.filter((c) => c.id !== CATEGORY_IDS.OTHER && c.id !== CATEGORY_IDS.INCOME).map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleClassify(desc, cat.id, !isOneOff)}
-                    className="px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border transition-colors hover:text-white"
-                    style={{
-                      borderColor: cat.color,
-                      color: cat.color,
-                      background: "white",
-                    }}
-                    onMouseOver={(e) => (e.currentTarget.style.background = cat.color)}
-                    onMouseOut={(e) => (e.currentTarget.style.background = "white")}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        {visible.map(([desc, info]) => (
+          <ClassifyCard
+            key={desc}
+            desc={desc}
+            count={info.count}
+            total={info.total}
+            isOneOff={oneOff[desc] ?? false}
+            customKeyword={customKeywords[desc] ?? ""}
+            categories={classifyCats}
+            onToggleOneOff={(d) => setOneOff((prev) => ({ ...prev, [d]: !prev[d] }))}
+            onKeywordChange={(d, v) => setCustomKeywords((prev) => ({ ...prev, [d]: v }))}
+            onClassify={handleClassify}
+          />
+        ))}
         {hasMore && !showAll && (
           <button
             onClick={() => setShowAll(true)}

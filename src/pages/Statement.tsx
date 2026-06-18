@@ -10,6 +10,10 @@ import ReclassifyModal from "../components/ReclassifyModal";
 import type { ColDef } from "ag-grid-community";
 import { catStyleTag, rowClassRules } from "../utils/styleUtils";
 import { extractKeyword, matchKeyword } from "../utils/classify";
+import EditableDescriptionCell from "../components/EditableDescriptionCell";
+import CategorySelectCell from "../components/CategorySelectCell";
+import TransactionTypeCell from "../components/TransactionTypeCell";
+import StatementHeader from "../components/StatementHeader";
 
 export default function Statement() {
   const search = useUIStore((s) => s.searchQuery);
@@ -121,6 +125,11 @@ export default function Statement() {
     }
   }, [cats, updateCategory, saveMonthData]);
 
+  const handleReclassifyTrigger = useCallback((tx: Transaction, newCategoryId: string) => {
+    setPendingReclass({ tx, newCategoryId });
+    setCustomKeyword("");
+  }, []);
+
   const confirmReclassify = useCallback(async () => {
     if (!pendingReclass) return;
     try {
@@ -187,21 +196,12 @@ export default function Statement() {
     }
   }, [saveMonthData]);
 
-  const mainColDefs: ColDef[] = [
+  const mainColDefs: ColDef[] = useMemo(() => [
     { field: "date", headerName: "Data", width: 110 },
     {
       field: "description", headerName: "Description", flex: 2, minWidth: 200,
-       cellRenderer: (p: { data: Transaction }) => (
-         <input
-           id={`description-input-${p.data.id}`}
-           name={`description-${p.data.id}`}
-           defaultValue={p.data.description}
-           onBlur={(e) => handleEditDescription(p.data, e.target.value)}
-           className="w-full bg-transparent border-none outline-none text-sm"
-           style={{ color: "inherit" }}
-            aria-label="Edit description"
-           onClick={(e) => e.stopPropagation()}
-         />
+      cellRenderer: (p: { data: Transaction }) => (
+        <EditableDescriptionCell data={p.data} onEdit={handleEditDescription} />
       ),
     },
     {
@@ -210,57 +210,27 @@ export default function Statement() {
     },
     {
       field: "categoryId", headerName: "Category", width: 160,
-       cellRenderer: (p: { data: Transaction }) => (
-         <select
-           id={`category-select-${p.data.id}`}
-           name={`category-${p.data.id}`}
-           value={p.data.categoryId}
-           onChange={(e) => {
-               if (e.target.value !== p.data.categoryId) {
-                 setPendingReclass({ tx: p.data, newCategoryId: e.target.value });
-                 setCustomKeyword("");
-                 (e.target as HTMLSelectElement).value = p.data.categoryId;
-             }
-           }}
-           className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 w-full bg-transparent"
-           style={{ color: "inherit" }}
-           onClick={(e) => e.stopPropagation()}
-         >
-          {cats.map((c) => (
-            <option key={c.id} value={c.id} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-              {c.name}
-            </option>
-          ))}
-        </select>
+      cellRenderer: (p: { data: Transaction }) => (
+        <CategorySelectCell data={p.data} categories={cats} onReclassify={handleReclassifyTrigger} />
       ),
     },
     {
       field: "categoryId", headerName: "Type", width: 90,
-      cellRenderer: (p: { data: Transaction }) =>
-        creditCatIds.has(p.data.categoryId)
-          ? <span className="text-green-600 font-semibold text-xs">CREDIT</span>
-          : <span className="text-red-600 font-semibold text-xs">DEBIT</span>,
+      cellRenderer: (p: { data: Transaction }) => (
+        <TransactionTypeCell categoryId={p.data.categoryId} creditCatIds={creditCatIds} />
+      ),
     },
     { field: "source", headerName: "File", width: 150 },
-  ];
+  ], [cats, creditCatIds, handleEditDescription, handleReclassifyTrigger]);
 
   return (
     <div className="flex flex-col flex-1 overflow-auto">
       <style>{tagStyle}</style>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold dark:text-white">
-          Statement
-          {dupGroups.length > 0 && (
-            <span className="text-sm font-normal text-amber-600 ml-3">
-              {dupGroups.length} group(s) with possible duplicates
-            </span>
-          )}
-        </h1>
-        <div className="text-gray-500 dark:text-white text-sm text-right">
-          <div>Expenses: £{debitTotal.toLocaleString()}</div>
-          {creditTotal > 0 && <div className="text-green-600">Income: £{Math.round(creditTotal).toLocaleString()}</div>}
-        </div>
-      </div>
+      <StatementHeader
+        dupGroupsLength={dupGroups.length}
+        debitTotal={debitTotal}
+        creditTotal={creditTotal}
+      />
 
       <FilterBar
         search={search}

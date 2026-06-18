@@ -60,12 +60,11 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <nav
         aria-label="Main navigation"
-        className={`fixed md:static z-20 w-56 bg-slate-800 text-white py-5 shrink-0 min-h-screen transition-transform md:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed md:static z-20 w-56 bg-slate-800 text-white py-5 shrink-0 min-h-screen transition-transform md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex items-center justify-between px-5 mb-6">
-          <h2 className="text-lg font-bold">Spending</h2>
+          <h2 className="text-lg font-bold">SpendTrak</h2>
           <button
             onClick={toggleSidebar}
             className="md:hidden text-white cursor-pointer"
@@ -80,10 +79,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             to={path}
             end={path === "/"}
             className={({ isActive }: { isActive: boolean }) =>
-              `block px-5 py-2.5 text-sm border-l-3 no-underline transition-colors ${
-                isActive
-                  ? "text-white bg-slate-700 font-semibold border-l-blue-500"
-                  : "text-slate-400 border-l-transparent hover:text-slate-200"
+              `block px-5 py-2.5 text-sm border-l-3 no-underline transition-colors ${isActive
+                ? "text-white bg-slate-700 font-semibold border-l-blue-500"
+                : "text-slate-400 border-l-transparent hover:text-slate-200"
               }`
             }
             onClick={() => {
@@ -105,14 +103,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           >
             ☰
           </button>
-          <h2 className="font-bold text-gray-800 dark:text-gray-200 shrink-0 hidden md:block">Spending</h2>
+          <h2 className="font-bold text-gray-800 dark:text-gray-200 shrink-0 hidden md:block">Search</h2>
           <input
             id="header-search"
             name="headerSearch"
             value={input}
             onChange={handleSearchChange}
             placeholder="Search transactions..."
-            aria-label="Search transactions"
+            aria-label="Search transactions..."
             className="flex-1 max-w-md px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <button
