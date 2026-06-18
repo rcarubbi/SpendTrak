@@ -12,8 +12,11 @@ const NotFound = lazy(() => import("../pages/NotFound"));
 
 function PageLoader() {
   return (
-    <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
-      Loading...
+    <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-700 border-t-blue-500 animate-spin" />
+        <span className="text-sm text-gray-400 dark:text-gray-500 animate-pulse-subtle">Loading...</span>
+      </div>
     </div>
   );
 }
