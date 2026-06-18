@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Category, CategoryType } from "../types";
 import * as fs from "../utils/fileSystem";
 import { CATEGORY_IDS, KNOWN_CREDIT_IDS } from "../constants";
+import { toastSuccess, toastError } from "./toastStore";
 
 interface CategoryState {
   categories: Category[];
@@ -38,23 +39,38 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   addCategory: async (cat) => {
     const next = [...get().categories, cat];
     set({ categories: next });
-    await fs.writeJSON("categories.json", next).catch(() => {});
+    try {
+      await fs.writeJSON("categories.json", next);
+      toastSuccess(`Category "${cat.name}" created`);
+    } catch (err) {
+      toastError(`Failed to save category "${cat.name}"`, err instanceof Error ? err.stack : String(err));
+    }
   },
 
   updateCategory: async (id, updates) => {
     const idx = get().categories.findIndex((c) => c.id === id);
-    if (idx < 0) return;
+    if (idx < 0) { toastError(`Category "${id}" not found`); return; }
     const next = [...get().categories];
     next[idx] = { ...next[idx], ...updates };
     set({ categories: next });
-    await fs.writeJSON("categories.json", next).catch(() => {});
+    try {
+      await fs.writeJSON("categories.json", next);
+    } catch (err) {
+      toastError(`Failed to save category "${next[idx].name}"`, err instanceof Error ? err.stack : String(err));
+    }
   },
 
   deleteCategory: async (id) => {
     if (id === CATEGORY_IDS.OTHER) return;
+    const cat = get().categories.find((c) => c.id === id);
     const next = get().categories.filter((c) => c.id !== id);
     set({ categories: next });
-    await fs.writeJSON("categories.json", next).catch(() => {});
+    try {
+      await fs.writeJSON("categories.json", next);
+      toastSuccess(`Category "${cat?.name ?? id}" deleted`);
+    } catch (err) {
+      toastError(`Failed to delete category "${cat?.name ?? id}"`, err instanceof Error ? err.stack : String(err));
+    }
   },
 }));
 

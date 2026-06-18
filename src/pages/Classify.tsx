@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useTransition } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore } from "../stores/transactionStore";
+import { toastSuccess, toastError } from "../stores/toastStore";
 import type { Transaction } from "../types";
 import { extractKeyword } from "../utils/classify";
 import { CATEGORY_IDS } from "../constants";
@@ -15,7 +16,7 @@ export default function Classify() {
   const [oneOff, setOneOff] = useState<Record<string, boolean>>({});
   const [customKeywords, setCustomKeywords] = useState<Record<string, string>>({});
   const [showAll, setShowAll] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [reclassProgress, setReclassProgress] = useState<{ done: number; total: number } | null>(null);
   const unknown = useMemo(
     () => Object.values(months).flatMap((m) => m.transactions).filter((tx) => tx.categoryId === CATEGORY_IDS.OTHER),
@@ -32,7 +33,7 @@ export default function Classify() {
       entry.count++;
       entry.total += tx.amount;
     }
-    return Array.from(map.entries()).sort((a, b) => b[1].total - a[1].total);
+    return Array.from(map.entries()).toSorted((a, b) => b[1].total - a[1].total);
   }, [unknown]);
 
   const LIMIT = 50;
@@ -50,6 +51,7 @@ export default function Classify() {
 
     const cat = cats.find((c) => c.id === catId);
     if (!cat) {
+      toastError("Category not found");
       return;
     }
 
@@ -77,30 +79,32 @@ export default function Classify() {
         const [y, m] = monthKey.split("-").map(Number);
         await doSaveMonthData({ year: y, month: m, transactions: txs, uploadedAt: new Date().toISOString() });
       }
-    } catch {
-      // swallow — error notification not critical for UX
+      toastSuccess(`Classified as ${cat.name}`);
+    } catch (err) {
+      toastError(`Failed to classify as ${cat.name}`, err instanceof Error ? err.stack : String(err));
     }
   }, [byDesc, cats, updateCategory, doSaveMonthData, customKeywords]);
 
-  const handleReclassifyAll = useCallback(async () => {
+  const handleReclassifyAll = useCallback(() => {
     const store = useTransactionStore.getState();
     const reclassify = store.reclassifyAll;
     const categories = useCategoryStore.getState().categories;
     
-    setLoading(true);
-    setReclassProgress({ done: 0, total: 0 });
-    try {
-      await reclassify(categories, (done, total) => {
-        setReclassProgress({ done, total });
-      });
-      setOneOff({});
-      setCustomKeywords({});
-    } catch {
-      // swallow — progress indicator already clears in finally
-    } finally {
-      setReclassProgress(null);
-      setLoading(false);
-    }
+    startTransition(async () => {
+      setReclassProgress({ done: 0, total: 0 });
+      try {
+        await reclassify(categories, (done, total) => {
+          setReclassProgress({ done, total });
+        });
+        setOneOff({});
+        setCustomKeywords({});
+        toastSuccess("Reclassification complete");
+      } catch (err) {
+        toastError("Reclassification failed", err instanceof Error ? err.stack : String(err));
+      } finally {
+        setReclassProgress(null);
+      }
+    });
   }, []);
 
   if (unknown.length === 0) {
@@ -114,8 +118,8 @@ export default function Classify() {
 
   return (
     <div>
-      <ClassifyHeader unknownCount={unknown.length} loading={loading} onReclassifyAll={handleReclassifyAll} />
-      {loading && (
+      <ClassifyHeader unknownCount={unknown.length} loading={isPending} onReclassifyAll={handleReclassifyAll} />
+      {isPending && (
         <div className="flex items-center gap-2 mb-4 text-sm text-blue-700">
           <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
           {reclassProgress

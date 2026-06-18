@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
+import { toastError } from "../stores/toastStore";
 import type { CategoryType } from "../types";
 
 interface CategoryFormModalProps {
@@ -18,7 +19,7 @@ export default function CategoryFormModal({ show, onClose }: CategoryFormModalPr
     const id = form.id.trim().toLowerCase().replace(/\s+/g, "_");
     if (!id) return;
     if (cats.find((c) => c.id === id)) {
-      alert("A category with this ID already exists.");
+      toastError("A category with this ID already exists.");
       return;
     }
     await addCategory({ id, name: form.name || id, color: form.color, type: form.type, keywords: [] });

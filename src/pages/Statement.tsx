@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useTransition } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
 import { useTransactionStore, getLoadedMonths, loadMonthData, getPossibleDuplicates } from "../stores/transactionStore";
 import { useUIStore } from "../stores/uiStore";
+import { toastSuccess, toastError } from "../stores/toastStore";
 import type { Transaction } from "../types";
 import DataGrid from "../components/DataGrid";
 import FilterBar from "../components/FilterBar";
@@ -21,7 +22,7 @@ export default function Statement() {
   const [catFilter, setCatFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [showDuplicates, setShowDuplicates] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [reclassProgress, setReclassProgress] = useState<{ done: number; total: number } | null>(null);
   const [pendingReclass, setPendingReclass] = useState<{ tx: Transaction; newCategoryId: string } | null>(null);
   const [customKeyword, setCustomKeyword] = useState("");
@@ -32,32 +33,36 @@ export default function Statement() {
   const loaded = useTransactionStore((s) => s.loaded);
   const saveMonthData = useTransactionStore((s) => s.saveMonthData);
   const deleteTx = useTransactionStore((s) => s.deleteTransaction);
-  const reclassifyAll = useTransactionStore((s) => s.reclassifyAll);
   const updateCategory = useCategoryStore((s) => s.updateCategory);
 
   const txs = useMemo(() => Object.values(months).flatMap((m) => m.transactions), [months]);
-  const dupGroups = useMemo(() => getPossibleDuplicates(), [txs]);
+  const dupGroups = useMemo(() => getPossibleDuplicates(txs), [txs]);
 
   const creditCatIds = useMemo(() => new Set(cats.filter((c) => c.type === "credit").map((c) => c.id)), [cats]);
   const debitCatIds = useMemo(() => new Set(cats.filter((c) => c.type !== "credit").map((c) => c.id)), [cats]);
 
-  const loadedMonths = useMemo(() => Object.keys(months).sort(), [months]);
+  const loadedMonths = useMemo(() => Object.keys(months).toSorted(), [months]);
 
   const debitTotal = useMemo(() => txs.reduce((s, t) => (debitCatIds.has(t.categoryId) ? s + t.amount : s), 0), [txs, debitCatIds]);
   const creditTotal = useMemo(() => txs.reduce((s, t) => (creditCatIds.has(t.categoryId) ? s + t.amount : s), 0), [txs, creditCatIds]);
 
   const handleMergeDuplicates = useCallback(async (groupTxs: Transaction[]) => {
     const [, ...rest] = groupTxs;
+    let count = 0;
     for (const tx of rest) {
       for (const monthKey of getLoadedMonths()) {
         const [year, month] = monthKey.split("-").map(Number);
         const existing = loadMonthData(year, month);
         if (existing?.transactions.some((t) => t.id === tx.id)) {
-          await deleteTx(year, month, tx.id);
+          try {
+            await deleteTx(year, month, tx.id);
+            count++;
+          } catch { /* toast handled in store */ }
           break;
         }
       }
     }
+    if (count > 0) toastSuccess(`Merged ${count} duplicate(s)`);
   }, [deleteTx]);
 
   const handleDelete = useCallback(async (txId: string) => {
@@ -65,7 +70,10 @@ export default function Statement() {
       const [year, month] = monthKey.split("-").map(Number);
       const existing = loadMonthData(year, month);
       if (existing?.transactions.some((t) => t.id === txId)) {
-        await deleteTx(year, month, txId);
+        try {
+          await deleteTx(year, month, txId);
+          toastSuccess("Transaction deleted");
+        } catch { /* toast handled in store */ }
         break;
       }
     }
@@ -76,6 +84,7 @@ export default function Statement() {
     const newCat = cats.find((c) => c.id === newCategoryId);
     
     if (!oldCat || !newCat) {
+      toastError("Category not found");
       return;
     }
 
@@ -84,6 +93,7 @@ export default function Statement() {
     const existing = loadMonthData(year, month);
     
     if (!existing) {
+      toastError("Transaction data not found");
       return;
     }
 
@@ -112,6 +122,7 @@ export default function Statement() {
       // Save transaction
       const updatedTx = { ...tx, categoryId: newCategoryId, manual: true };
       await saveMonthData({ year, month, transactions: [updatedTx], uploadedAt: existing.uploadedAt });
+      toastSuccess(`Reclassified to ${newCat.name}`);
     } catch (error) {
       if (shouldSaveKeyword) {
         try {
@@ -121,6 +132,7 @@ export default function Statement() {
           // rollback failed — no recovery possible
         }
       }
+      toastError(`Failed to reclassify transaction`, error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }, [cats, updateCategory, saveMonthData]);
@@ -142,23 +154,24 @@ export default function Statement() {
     }
   }, [pendingReclass, customKeyword, saveKeywordRule, handleReclassify]);
 
-  const handleReclassifyAll = useCallback(async () => {
+  const handleReclassifyAll = useCallback(() => {
     const store = useTransactionStore.getState();
     const reclassify = store.reclassifyAll;
     const categories = useCategoryStore.getState().categories;
     
-    setLoading(true);
-    setReclassProgress({ done: 0, total: 0 });
-    try {
-      await reclassify(categories, (done, total) => {
-        setReclassProgress({ done, total });
-      });
-    } catch {
-      // swallow — progress clears in finally
-    } finally {
-      setReclassProgress(null);
-      setLoading(false);
-    }
+    startTransition(async () => {
+      setReclassProgress({ done: 0, total: 0 });
+      try {
+        await reclassify(categories, (done, total) => {
+          setReclassProgress({ done, total });
+        });
+        toastSuccess("Reclassification complete");
+      } catch (err) {
+        toastError("Reclassification failed", err instanceof Error ? err.stack : String(err));
+      } finally {
+        setReclassProgress(null);
+      }
+    });
   }, []);
 
   const filtered = useMemo(() => {
@@ -186,13 +199,15 @@ export default function Statement() {
     const [year, month] = monthKey.split("-").map(Number);
     const existing = loadMonthData(year, month);
     if (!existing) {
+      toastError("Transaction data not found");
       return;
     }
     try {
       const updatedTx = { ...tx, description: newDesc.trim() };
       await saveMonthData({ year, month, transactions: [updatedTx], uploadedAt: existing.uploadedAt });
-    } catch {
-      // swallow — description update not critical
+      toastSuccess("Description updated");
+    } catch (err) {
+      toastError("Failed to update description", err instanceof Error ? err.stack : String(err));
     }
   }, [saveMonthData]);
 
@@ -245,7 +260,7 @@ export default function Statement() {
         onToggleDuplicates={() => setShowDuplicates((d) => !d)}
         dupCount={dupGroups.length}
         onReclassifyAll={handleReclassifyAll}
-        reclassLoading={loading}
+        reclassLoading={isPending}
         reclassProgress={reclassProgress}
       />
 
@@ -262,7 +277,7 @@ export default function Statement() {
           colDefs={mainColDefs}
           exportFilename="full-statement"
           rowClassRules={rowRules}
-          loading={loading || !loaded}
+          loading={isPending || !loaded}
           fillHeight
         />
       )}

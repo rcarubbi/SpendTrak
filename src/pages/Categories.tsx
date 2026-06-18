@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
+import { toastSuccess } from "../stores/toastStore";
 import type { CategoryType } from "../types";
-import { CATEGORY_IDS } from "../constants";
 import CategoryCard from "../components/CategoryCard";
 import CategoryFormModal from "../components/CategoryFormModal";
 import KeywordModal from "../components/KeywordModal";
@@ -18,14 +18,17 @@ export default function Categories() {
 
   const handleEditName = async (id: string, name: string) => {
     await updateCategory(id, { name });
+    toastSuccess("Name updated");
   };
 
   const handleEditColor = async (id: string, color: string) => {
     await updateCategory(id, { color });
+    toastSuccess("Color updated");
   };
 
   const handleEditType = async (id: string, type: CategoryType) => {
     await updateCategory(id, { type });
+    toastSuccess("Type updated");
   };
 
   const handleDelete = async (id: string) => {
@@ -44,6 +47,7 @@ export default function Categories() {
     const cat = cats.find((c) => c.id === catId);
     if (!cat) return;
     await updateCategory(catId, { keywords: cat.keywords.filter((k) => k !== kw) });
+    toastSuccess(`Keyword "${kw}" removed`);
   };
 
   const handleFinishEdit = (id: string, name: string) => {
@@ -61,7 +65,7 @@ export default function Categories() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {cats.filter((c) => c.id !== CATEGORY_IDS.INCOME).map((cat) => (
+        {cats.map((cat) => (
           <CategoryCard
             key={cat.id}
             cat={cat}

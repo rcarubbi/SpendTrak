@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
+import { toastSuccess, toastError } from "../stores/toastStore";
 
 interface KeywordModalProps {
   show: boolean;
@@ -17,13 +18,17 @@ export default function KeywordModal({ show, categoryId, onClose }: KeywordModal
   const handleSave = async () => {
     if (!keyword.trim()) return;
     const cat = cats.find((c) => c.id === categoryId);
-    if (!cat) return;
+    if (!cat) {
+      toastError("Category not found");
+      return;
+    }
     const kw = keyword.toUpperCase();
     if (cat.keywords.includes(kw)) {
-      alert("Keyword already exists in this category.");
+      toastError(`Keyword "${kw}" already exists in this category.`);
       return;
     }
     await updateCategory(categoryId, { keywords: [...cat.keywords, kw] });
+    toastSuccess(`Keyword "${kw}" added`);
     setKeyword("");
     onClose();
   };

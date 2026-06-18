@@ -1,5 +1,6 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, type ReactNode } from "react";
+import { Toaster } from "react-hot-toast";
 import { useUIStore } from "../stores/uiStore";
 
 const links: [string, string][] = [
@@ -124,6 +125,8 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         <div className="p-6 overflow-auto flex flex-col flex-1">{children}</div>
       </main>
+
+      <Toaster position="top-right" />
     </div>
   );
 }

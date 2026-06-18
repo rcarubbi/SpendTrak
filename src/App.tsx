@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCategoryStore } from "./stores/categoryStore";
 import { useTransactionStore } from "./stores/transactionStore";
+import { toastError } from "./stores/toastStore";
 import { ensureDataDir, pickDataDir } from "./utils/fileSystem";
 import SetupScreen from "./components/SetupScreen";
 import AppRouter from "./components/AppRouter";
@@ -22,6 +23,7 @@ export default function App() {
         return;
       }
     } catch (err) {
+      toastError("App failed to start — pick your data folder", err instanceof Error ? err.stack : String(err));
       console.error("App: boot failed", err);
     }
     setState("setup");

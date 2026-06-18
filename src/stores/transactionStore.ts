@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { MonthData, Transaction, Category } from "../types";
 import * as fs from "../utils/fileSystem";
 import { classify } from "../utils/classify";
+import { toastError } from "./toastStore";
 
 function cacheKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;
@@ -58,7 +59,12 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       uploadedAt: data.uploadedAt || new Date().toISOString(),
     };
 
-    await fs.writeMonthData(monthData);
+    try {
+      await fs.writeMonthData(monthData);
+    } catch (err) {
+      toastError(`Failed to save ${data.year}-${String(data.month).padStart(2, "0")} data`, err instanceof Error ? err.stack : String(err));
+      throw err;
+    }
     set((s) => ({ months: { ...s.months, [key]: monthData } }));
   },
 
@@ -71,7 +77,12 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       ...data,
       transactions: data.transactions.filter((t) => t.id !== txId),
     };
-    await fs.writeMonthData(updated);
+    try {
+      await fs.writeMonthData(updated);
+    } catch (err) {
+      toastError(`Failed to delete transaction`, err instanceof Error ? err.stack : String(err));
+      throw err;
+    }
     set((s) => ({ months: { ...s.months, [key]: updated } }));
   },
 
@@ -86,7 +97,12 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       const newTxs = [...monthData.transactions];
       newTxs[idx] = { ...newTxs[idx], ...updates };
       newMonths[key] = { ...monthData, transactions: newTxs };
-      await fs.writeMonthData(newMonths[key]);
+      try {
+        await fs.writeMonthData(newMonths[key]);
+      } catch (err) {
+        toastError(`Failed to update transaction`, err instanceof Error ? err.stack : String(err));
+        throw err;
+      }
       changed = true;
       break;
     }
@@ -115,28 +131,17 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
 
       if (changed) {
         const updated: MonthData = { ...monthData, transactions: newTxs };
-        await fs.writeMonthData(updated);
+        try {
+          await fs.writeMonthData(updated);
+        } catch (err) {
+          toastError(`Failed to save reclassified data for ${key}`, err instanceof Error ? err.stack : String(err));
+          throw err;
+        }
         set((s) => ({ months: { ...s.months, [key]: updated } }));
       }
     }
   },
 }));
-
-let _cachedMonths: Record<string, MonthData> | null = null;
-let _cachedTxs: Transaction[] = [];
-
-function getAllTransactions(): Transaction[] {
-  const months = useTransactionStore.getState().months;
-  if (_cachedMonths === months) return _cachedTxs;
-  const keys = Object.keys(months).sort();
-  const result: Transaction[] = [];
-  for (const key of keys) {
-    result.push(...months[key].transactions);
-  }
-  _cachedMonths = months;
-  _cachedTxs = result;
-  return result;
-}
 
 export function getLoadedMonths(): string[] {
   return Object.keys(useTransactionStore.getState().months).sort();
@@ -146,9 +151,9 @@ export function loadMonthData(year: number, month: number): MonthData | null {
   return useTransactionStore.getState().loadMonthData(year, month);
 }
 
-export function getPossibleDuplicates(): DuplicateGroup[] {
+export function getPossibleDuplicates(transactions: Transaction[]): DuplicateGroup[] {
   const groups = new Map<string, Transaction[]>();
-  for (const tx of getAllTransactions()) {
+  for (const tx of transactions) {
     const key = `${tx.date}|${tx.description.toUpperCase()}|${tx.amount}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(tx);

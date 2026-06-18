@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useCategoryStore } from "../stores/categoryStore";
 import { classify } from "../utils/classify";
 import { useTransactionStore } from "../stores/transactionStore";
+import { toastSuccess, toastError } from "../stores/toastStore";
 import type { Transaction } from "../types";
 import { getProviders, detectProvider } from "../providers";
 import type { UploadProvider } from "../providers/types";
@@ -156,11 +157,15 @@ export default function Upload() {
         });
       }
 
-      setStatus(`Imported: ${pending.transactions.length} transactions across ${byMonth.size} months via ${pending.provider}`);
+      const msg = `Imported ${pending.transactions.length} transactions across ${byMonth.size} months via ${pending.provider}`;
+      setStatus(msg);
+      toastSuccess(msg);
       setDebug(pending.debug);
       setPending(null);
     } catch (err) {
-      setStatus(`Error saving: ${err instanceof Error ? err.message : String(err)}`);
+      const msg = `Error saving: ${err instanceof Error ? err.message : String(err)}`;
+      setStatus(msg);
+      toastError(msg, err instanceof Error ? err.stack : String(err));
     }
   }, [pending, saveMonthData]);
 
