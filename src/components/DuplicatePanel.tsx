@@ -12,7 +12,7 @@ interface DuplicatePanelProps {
 
 export default function DuplicatePanel({ groups, onMerge, onDelete, rowClassRules }: DuplicatePanelProps) {
   if (groups.length === 0) {
-    return <p className="text-center text-gray-400 dark:text-white mt-8">Nenhuma duplicata encontrada</p>;
+    return <p className="text-center text-gray-400 dark:text-white mt-8">No duplicates found</p>;
   }
 
   return (
@@ -28,7 +28,7 @@ export default function DuplicatePanel({ groups, onMerge, onDelete, rowClassRule
               <button
                 onClick={() => onMerge(group.txs)}
                 className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 font-bold text-xs cursor-pointer"
-                title="Manter esta, remover duplicatas"
+                title="Keep this one, remove duplicates"
               >
                 ✕ Manter esta
               </button>
@@ -38,14 +38,14 @@ export default function DuplicatePanel({ groups, onMerge, onDelete, rowClassRule
             <DataGrid
               rows={group.txs}
               colDefs={[
-                { field: "source", headerName: "Arquivo", width: 140 },
-                { field: "account", headerName: "Conta", width: 120 },
+                { field: "source", headerName: "File", width: 140 },
+                { field: "account", headerName: "Account", width: 120 },
                 {
-                  field: "amount", headerName: "Valor", width: 90, type: "rightAligned",
+                  field: "amount", headerName: "Amount", width: 90, type: "rightAligned",
                   valueFormatter: (p: { value?: number }) => `£${p.value?.toFixed(2) ?? "0.00"}`,
                 },
                 {
-                  field: "categoryId", headerName: "Categoria", width: 120,
+                  field: "categoryId", headerName: "Category", width: 120,
                   cellRenderer: (p: { value: string }) => <CategoryBadge categoryId={p.value} />,
                 },
                 {
@@ -55,13 +55,13 @@ export default function DuplicatePanel({ groups, onMerge, onDelete, rowClassRule
                       onClick={() => onDelete(p.data.id)}
                       className="text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer"
                     >
-                      Remover
+                      Remove
                     </button>
                   ),
                 },
               ]}
               height={group.txs.length * 40 + 50}
-              exportFilename={`duplicata-${group.txs[0].date}`}
+              exportFilename={`duplicate-${group.txs[0].date}`}
               rowClassRules={rowClassRules}
             />
           </div>

@@ -25,25 +25,31 @@ export default function FilterBar({
     <>
       <div className="flex gap-3 mb-4 items-center flex-wrap">
         <input
-          placeholder="Buscar descrição..."
+          id="search-description"
+          name="search"
+          placeholder="Search description..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className="flex-1 min-w-[150px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 md:hidden"
         />
         <select
+          id="month-filter"
+          name="monthFilter"
           value={monthFilter}
           onChange={(e) => onMonthFilterChange(e.target.value)}
           className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          <option value="all">Todos meses</option>
+          <option value="all">All months</option>
           {loadedMonths.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
         <select
+          id="category-filter"
+          name="catFilter"
           value={catFilter}
           onChange={(e) => onCatFilterChange(e.target.value)}
           className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          <option value="all">Todas categorias</option>
+          <option value="all">All categories</option>
           {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <button
@@ -54,22 +60,22 @@ export default function FilterBar({
               : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
           }`}
         >
-          {showDuplicates ? "⇤ Ver todas" : `⚠ Duplicatas (${dupCount})`}
+          {showDuplicates ? "⇤ Show all" : `⚠ Duplicates (${dupCount})`}
         </button>
         <button
           onClick={onReclassifyAll}
           disabled={reclassLoading}
           className="px-3 py-2 rounded-md text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer disabled:opacity-50"
         >
-          Reclassificar tudo
+          Reclassify all
         </button>
       </div>
       {reclassLoading && (
         <div className="flex items-center gap-2 mb-4 text-sm text-blue-700">
           <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
           {reclassProgress
-            ? `Reclassificando... ${reclassProgress.done}/${reclassProgress.total}`
-            : "Reclassificando transações..."}
+            ? `Reclassifying... ${reclassProgress.done}/${reclassProgress.total}`
+            : "Reclassifying transactions..."}
         </div>
       )}
     </>

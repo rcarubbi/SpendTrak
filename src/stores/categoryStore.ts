@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Category, CategoryType } from "../types";
 import * as fs from "../utils/fileSystem";
+import { CATEGORY_IDS, KNOWN_CREDIT_IDS } from "../constants";
 
 interface CategoryState {
   categories: Category[];
@@ -28,7 +29,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
       set({ categories: cats, loaded: true });
       try {
         await fs.writeJSON("categories.json", cats);
-      } catch { /* noop */ }
+      } catch (err) { console.error("categoryStore: write fallback categories failed", err); }
     } catch {
       set({ loaded: true });
     }
@@ -50,7 +51,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   },
 
   deleteCategory: async (id) => {
-    if (id === "outros") return;
+    if (id === CATEGORY_IDS.OTHER) return;
     const next = get().categories.filter((c) => c.id !== id);
     set({ categories: next });
     await fs.writeJSON("categories.json", next).catch(() => {});
@@ -60,8 +61,6 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
 function migrateTypes(cats: Category[]): Category[] {
   return cats.map((cat) => {
     if (cat.type) return cat;
-    return { ...cat, type: (cat.id === "receita" ? "credit" : "debit") as CategoryType };
+    return { ...cat, type: (KNOWN_CREDIT_IDS.has(cat.id) ? "credit" : "debit") as CategoryType };
   });
 }
-
-export { classify } from "../utils/classify";

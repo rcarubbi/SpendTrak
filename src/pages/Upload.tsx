@@ -34,7 +34,13 @@ export default function Upload() {
   const processFiles = useCallback(async (files: FileList) => {
     if (files.length === 0) return;
 
-    setStatus(`Lendo ${files.length} arquivo(s)...`);
+    if (cats.length === 0) {
+      setStatus("Categories not loaded yet. Please wait and try again.");
+      setLoading(false);
+      return;
+    }
+
+    setStatus(`Reading ${files.length} file(s)...`);
     setLoading(true);
     setDebug("");
     setPending(null);
@@ -48,21 +54,21 @@ export default function Upload() {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      setStatus(`Processando ${file.name} (${i + 1}/${files.length})...`);
+      setStatus(`Processing ${file.name} (${i + 1}/${files.length})...`);
 
       let provider: UploadProvider | undefined;
 
       if (selectedProvider === "auto") {
         provider = detectProvider(file.name);
         if (!provider) {
-          setStatus(`Nenhum provider encontrado para "${file.name}"`);
+          setStatus(`No provider found for "${file.name}"`);
           hasError = true;
           continue;
         }
       } else {
         provider = providers.find((p) => p.id === selectedProvider);
         if (!provider) {
-          setStatus("Provider inválido");
+          setStatus("Invalid provider");
           hasError = true;
           continue;
         }
@@ -85,7 +91,7 @@ export default function Upload() {
         totalDebit += debitTotal;
         if (result.debug) debugLogs.push(`--- ${file.name} ---\n${result.debug}`);
       } catch (err) {
-        setStatus(`Erro em ${file.name}: ${err instanceof Error ? err.message : String(err)}`);
+        setStatus(`Error in ${file.name}: ${err instanceof Error ? err.message : String(err)}`);
         hasError = true;
       }
     }
@@ -98,9 +104,9 @@ export default function Upload() {
         provider: providerName,
         debug: debugLogs.join("\n\n"),
       });
-      setStatus(`Pronto pra importar: ${allTxs.length} transações em ${allMonths.size} meses`);
+      setStatus(`Ready to import: ${allTxs.length} transactions across ${allMonths.size} months`);
     } else if (!hasError) {
-      setStatus("Nenhuma transação encontrada nos arquivos selecionados.");
+      setStatus("No transactions found in selected files.");
     }
 
     setLoading(false);
@@ -134,7 +140,7 @@ export default function Upload() {
   const handleConfirm = useCallback(async () => {
     if (!pending) return;
 
-    setStatus("Salvando...");
+    setStatus("Saving...");
 
     try {
       const byMonth = new Map<string, Transaction[]>();
@@ -154,16 +160,16 @@ export default function Upload() {
         });
       }
 
-      setStatus(`Importado: ${pending.transactions.length} transações em ${byMonth.size} meses via ${pending.provider}`);
+      setStatus(`Imported: ${pending.transactions.length} transactions across ${byMonth.size} months via ${pending.provider}`);
       setDebug(pending.debug);
       setPending(null);
     } catch (err) {
-      setStatus(`Erro ao salvar: ${err instanceof Error ? err.message : String(err)}`);
+      setStatus(`Error saving: ${err instanceof Error ? err.message : String(err)}`);
     }
   }, [pending, saveMonthData]);
 
   const handleCancel = () => {
-    if (!confirm("Descartar pré-visualização?")) return;
+    if (!confirm("Discard preview?")) return;
     setPending(null);
     setStatus("");
     setDebug("");
@@ -171,13 +177,13 @@ export default function Upload() {
 
   const previewColDefs: ColDef[] = [
     { field: "date", headerName: "Data", width: 110 },
-    { field: "description", headerName: "Descrição", flex: 2, minWidth: 200 },
+    { field: "description", headerName: "Description", flex: 2, minWidth: 200 },
     {
-      field: "amount", headerName: "Valor", width: 100, type: "rightAligned",
+      field: "amount", headerName: "Amount", width: 100, type: "rightAligned",
       valueFormatter: (p) => `£${p.value?.toFixed(2) ?? "0.00"}`,
     },
     {
-      field: "categoryId", headerName: "Categoria", width: 140,
+      field: "categoryId", headerName: "Category", width: 140,
       cellRenderer: (p: { value: string }) => <CategoryBadge categoryId={p.value} />,
     },
   ];
@@ -209,7 +215,7 @@ export default function Upload() {
       <style>{tagStyle}</style>
       <h1 className="text-2xl font-bold mb-1 dark:text-gray-100">Upload</h1>
       <p className="text-gray-500 dark:text-gray-400 mb-6">
-        {allTxs.length} transações carregadas · Total: £{debitTotal.toLocaleString()}
+        {allTxs.length} transactions loaded · Total: £{debitTotal.toLocaleString()}
       </p>
 
       <div className="flex gap-3 items-center mb-4">
@@ -237,26 +243,28 @@ export default function Upload() {
         onDrop={handleDrop}
       >
         <p className="text-base text-gray-500 dark:text-gray-400 mb-3">
-          {dragging ? "Solte os arquivos aqui" : "Arraste arquivos ou clique para selecionar"}
+          {dragging ? "Drop files here" : "Drag files or click to select"}
         </p>
         <span className="inline-block px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors">
-          Selecionar arquivos
+          Select files
         </span>
-        <input
-          ref={fileRef}
-          type="file"
-          multiple
-          accept={providers.map((p) => p.accept).join(",")}
-          onChange={handleParse}
-          className="hidden"
-        />
+         <input
+           id="file-upload"
+           name="fileInput"
+           ref={fileRef}
+           type="file"
+           multiple
+           accept={providers.map((p) => p.accept).join(",")}
+           onChange={handleParse}
+           className="hidden"
+         />
       </label>
 
       {status && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-lg mb-4 text-sm font-semibold ${
-          status.startsWith("Erro")
+          status.startsWith("Error")
             ? "bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300"
-            : status.startsWith("Importado") || status.startsWith("Salvando")
+            : status.startsWith("Imported") || status.startsWith("Saving")
             ? "bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300"
             : "bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300"
         }`}>
@@ -269,26 +277,26 @@ export default function Upload() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold dark:text-gray-100">
-              Pré-visualização — {pending.transactions.length} transações, {pending.months.length} meses
+              Preview — {pending.transactions.length} transactions, {pending.months.length} months
             </h2>
             <div className="flex gap-2">
               <button
                 onClick={handleCancel}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
-                Cancelar
+                Cancel
               </button>
               <button
                 onClick={handleConfirm}
                 className="px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
               >
-                Confirmar importação
+                Confirm import
               </button>
             </div>
           </div>
 
           <div className="flex gap-2 flex-wrap mb-3">
-            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">£{pending.total.toLocaleString()} em débitos</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">£{pending.total.toLocaleString()} in debits</span>
             <span className="text-gray-300 dark:text-gray-600">|</span>
             {pending.months.map((m) => (
               <span key={m} className="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-xs font-medium dark:text-blue-200">{m}</span>
@@ -297,7 +305,7 @@ export default function Upload() {
 
           {pendingDuplicates.length > 0 && (
             <div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-4 text-sm font-semibold bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300">
-              ⚠ {pendingDuplicates.length} transação(ões) já existente(s) nos dados carregados
+              ⚠ {pendingDuplicates.length} transaction(s) already exist in loaded data
             </div>
           )}
 

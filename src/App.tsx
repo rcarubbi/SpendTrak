@@ -18,7 +18,7 @@ type AppState = "loading" | "setup" | "ready";
 function PageLoader() {
   return (
     <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
-      Carregando...
+      Loading...
     </div>
   );
 }
@@ -37,8 +37,8 @@ export default function App() {
         setState("ready");
         return;
       }
-    } catch {
-      // handle or init failed — fall through to setup
+    } catch (err) {
+      console.error("App: boot failed", err);
     }
     setState("setup");
   };
@@ -54,7 +54,7 @@ export default function App() {
       setState("ready");
     } catch (err) {
       if ((err as DOMException).name !== "AbortError") {
-        alert("Erro ao selecionar pasta: " + (err instanceof Error ? err.message : String(err)));
+        alert("Error picking folder: " + (err instanceof Error ? err.message : String(err)));
       }
       setState("setup");
     }
@@ -65,7 +65,7 @@ export default function App() {
   if (state === "loading") {
     return (
       <div className="flex items-center justify-center h-screen text-gray-500 text-lg">
-        Carregando...
+        Loading...
       </div>
     );
   }
@@ -73,18 +73,18 @@ export default function App() {
   if (state === "setup") {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <h1 className="text-xl font-bold">Spending Tracker</h1>
+        <h1 className="text-xl font-bold">SpendTrak</h1>
         <p className="text-gray-500 text-sm text-center max-w-md">
-          Nenhuma pasta de dados configurada ou a pasta anterior não existe mais.
+          No data folder configured or the previous folder no longer exists.
         </p>
         <p className="text-gray-400 text-xs text-center max-w-md -mt-2">
-          Selecione o diretório <code>data/</code> do seu projeto (ou crie um novo).
+          Select the <code>data/</code> directory of your project (or create a new one).
         </p>
         <button
           onClick={handlePickDir}
           className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors cursor-pointer"
         >
-          Selecionar pasta de dados
+          Select data folder
         </button>
       </div>
     );

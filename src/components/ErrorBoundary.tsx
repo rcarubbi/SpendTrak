@@ -33,15 +33,15 @@ export default class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
       return (
         <div className="flex flex-col items-center justify-center min-h-[300px] p-8 text-center">
-          <h2 className="text-xl font-bold text-red-600 mb-2">Algo deu errado</h2>
+          <h2 className="text-xl font-bold text-red-600 mb-2">Something went wrong</h2>
           <p className="text-gray-500 text-sm mb-4 max-w-md">
-            {this.state.error?.message ?? "Erro desconhecido"}
+            {this.state.error?.message ?? "Unknown error"}
           </p>
           <button
             onClick={this.handleRetry}
             className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
           >
-            Tentar novamente
+            Try again
           </button>
         </div>
       );

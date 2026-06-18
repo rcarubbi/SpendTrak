@@ -4,9 +4,9 @@ import { useUIStore } from "../stores/uiStore";
 
 const links: [string, string][] = [
   ["/", "Dashboard"],
-  ["/statement", "Extrato"],
-  ["/categories", "Categorias"],
-  ["/classify", "Classificar"],
+  ["/statement", "Statement"],
+  ["/categories", "Categories"],
+  ["/classify", "Classify"],
   ["/upload", "Upload CSV"],
 ];
 
@@ -59,17 +59,17 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       {/* Sidebar */}
       <nav
-        aria-label="Navegação principal"
+        aria-label="Main navigation"
         className={`fixed md:static z-20 w-56 bg-slate-800 text-white py-5 shrink-0 min-h-screen transition-transform md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between px-5 mb-6">
-          <h2 className="text-lg font-bold">Gastos</h2>
+          <h2 className="text-lg font-bold">Spending</h2>
           <button
             onClick={toggleSidebar}
             className="md:hidden text-white cursor-pointer"
-            aria-label="Fechar menu"
+            aria-label="Close menu"
           >
             ×
           </button>
@@ -101,22 +101,24 @@ export default function Layout({ children }: { children: ReactNode }) {
           <button
             onClick={toggleSidebar}
             className="text-gray-600 dark:text-gray-300 cursor-pointer md:hidden shrink-0"
-            aria-label="Abrir menu"
+            aria-label="Open menu"
           >
             ☰
           </button>
-          <h2 className="font-bold text-gray-800 dark:text-gray-200 shrink-0 hidden md:block">Gastos</h2>
+          <h2 className="font-bold text-gray-800 dark:text-gray-200 shrink-0 hidden md:block">Spending</h2>
           <input
+            id="header-search"
+            name="headerSearch"
             value={input}
             onChange={handleSearchChange}
-            placeholder="Buscar transações..."
-            aria-label="Buscar transações"
+            placeholder="Search transactions..."
+            aria-label="Search transactions"
             className="flex-1 max-w-md px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <button
             onClick={cycleTheme}
             className="text-lg cursor-pointer shrink-0 ml-auto"
-            aria-label="Alternar tema"
+            aria-label="Toggle theme"
           >
             {themeIcon}
           </button>

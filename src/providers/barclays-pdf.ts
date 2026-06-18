@@ -1,6 +1,7 @@
 import type { UploadProvider, ParseResult } from "./types";
 import type { Transaction } from "../types";
 import type * as PdfJs from "pdfjs-dist";
+import { CATEGORY_IDS } from "../constants";
 
 const MONTHS: Record<string, string> = {
   JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
@@ -227,7 +228,7 @@ export class BarclaysPdfProvider implements UploadProvider {
                 amount: txAmount,
                 description: desc,
                 subcategory: "",
-                categoryId: isCredit ? "receita" : "",
+                categoryId: isCredit ? CATEGORY_IDS.INCOME : "",
                 account: "BARCLAYS PDF",
                 source: "",
               });

@@ -23,7 +23,7 @@ export default function Dashboard() {
     return Array.from(s).sort();
   }, [txs]);
 
-  const [selectedYear, setSelectedYear] = useState(years[years.length - 1] || "2026");
+  const [selectedYear, setSelectedYear] = useState(years[years.length - 1] || String(new Date().getFullYear()));
 
   const monthsInYear = useMemo(() => {
     const s = new Set<string>();
@@ -64,8 +64,8 @@ export default function Dashboard() {
         const month = tx.date.slice(5, 7);
         const catName = cats.find((c) => c.id === tx.categoryId)?.name ?? tx.categoryId;
         if (!barMap.has(month)) barMap.set(month, { month } as { month: string; [cat: string]: number | string });
-        const entry = barMap.get(month)!;
-        entry[catName] = ((entry[catName] as number) || 0) + Math.round(tx.amount);
+        const entry = barMap.get(month);
+        if (entry) entry[catName] = ((entry[catName] as number) || 0) + Math.round(tx.amount);
       }
       if (isMonth && isDebit) {
         const idx = mDebit.findIndex((d) => d.name === tx.categoryId);
@@ -106,9 +106,9 @@ export default function Dashboard() {
   }, [barData]);
 
   const monthLabels = useMemo<Record<string, string>>(() => ({
-    "01": "Jan", "02": "Fev", "03": "Mar", "04": "Abr",
-    "05": "Mai", "06": "Jun", "07": "Jul", "08": "Ago",
-    "09": "Set", "10": "Out", "11": "Nov", "12": "Dez",
+    "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
+    "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
+    "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec",
   }), []);
 
   const fullBarData = useMemo(() => {
@@ -137,14 +137,14 @@ export default function Dashboard() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1 dark:text-gray-100">Dashboard</h1>
-      <p className="text-gray-500 dark:text-gray-400 mb-6">{txs.length} transações carregadas</p>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">{txs.length} transactions loaded</p>
 
       <div className="flex gap-3 items-center mb-6">
-        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Ano:</label>
+        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Year:</label>
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm">
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
-        <label className="text-sm font-medium text-gray-600 dark:text-gray-400 ml-2">Mês:</label>
+        <label className="text-sm font-medium text-gray-600 dark:text-gray-400 ml-2">Month:</label>
         <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm">
           {monthsInYear.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
@@ -155,8 +155,8 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-2">
             <p className="text-lg font-semibold dark:text-gray-100">{selectedYear}</p>
             <div className="text-right text-sm">
-              {yearCredit > 0 && <p className="text-emerald-600 font-semibold">Receita: £{Math.round(yearCredit).toLocaleString()}</p>}
-              <p className="text-gray-500">Despesas: £{totalYear.toLocaleString()}</p>
+              {yearCredit > 0 && <p className="text-emerald-600 font-semibold">Income: £{Math.round(yearCredit).toLocaleString()}</p>}
+              <p className="text-gray-500">Expenses: £{totalYear.toLocaleString()}</p>
             </div>
           </div>
           {yearDebit.length > 0 ? (
@@ -171,15 +171,15 @@ export default function Dashboard() {
                 />
               </PieChart>
             </ResponsiveContainer>
-          ) : <p className="text-gray-400 py-8 text-center">Sem dados</p>}
+          ) : <p className="text-gray-400 py-8 text-center">No data</p>}
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
           <div className="flex justify-between items-center mb-2">
-            <p className="text-lg font-semibold dark:text-gray-100">{selectedMonth || "Selecione um mês"}</p>
+            <p className="text-lg font-semibold dark:text-gray-100">{selectedMonth || "Select a month"}</p>
             <div className="text-right text-sm">
-              {monthCredit > 0 && <p className="text-emerald-600 font-semibold">Receita: £{Math.round(monthCredit).toLocaleString()}</p>}
-              <p className="text-gray-500">Despesas: £{totalMonth.toLocaleString()}</p>
+              {monthCredit > 0 && <p className="text-emerald-600 font-semibold">Income: £{Math.round(monthCredit).toLocaleString()}</p>}
+              <p className="text-gray-500">Expenses: £{totalMonth.toLocaleString()}</p>
             </div>
           </div>
           {monthDebit.length > 0 ? (
@@ -194,12 +194,12 @@ export default function Dashboard() {
                 />
               </PieChart>
             </ResponsiveContainer>
-          ) : <p className="text-gray-400 py-8 text-center">Selecione um mês</p>}
+          ) : <p className="text-gray-400 py-8 text-center">Select a month</p>}
         </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
-        <p className="text-lg font-semibold mb-4 dark:text-gray-100">Despesas mensais — {selectedYear}</p>
+        <p className="text-lg font-semibold mb-4 dark:text-gray-100">Monthly expenses — {selectedYear}</p>
         {fullBarData.length > 0 && catNames.length > 0 ? (
           <ResponsiveContainer width="100%" height={380}>
             <BarChart data={fullBarData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>

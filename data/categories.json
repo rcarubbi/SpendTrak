@@ -1,153 +1,126 @@
 [
   {
-    "id": "moradia",
-    "name": "Moradia",
+    "id": "housing",
+    "name": "Housing",
     "color": "#dc2626",
     "type": "debit",
     "keywords": [
-      "YOUR-MOVE",
-      "HAVERING",
+      "TV LICENCE",
+      "YOUR-MOVECOUK",
+      "L B HAVERING",
       "ESW WATER",
       "E.ON",
       "SCOTTISHPOWER",
-      "TV LICENCE"
+      "HYPEROPTIC"
     ]
   },
   {
-    "id": "educacao",
-    "name": "Educação",
+    "id": "education",
+    "name": "Education",
     "color": "#65a30d",
     "type": "debit",
     "keywords": [
-      "EXPLORE LEARNING",
-      "STAGES PERFORMERS "
+      "LA DANCE STUDIO",
+      "STAGES PERFORMERS",
+      "EXPLORE LEARNING"
     ]
   },
   {
-    "id": "supermercado",
-    "name": "Supermercado",
+    "id": "supermarket",
+    "name": "Supermarket",
     "color": "#16a34a",
     "type": "debit",
     "keywords": [
-      "THE RANGE",
       "SAINSBURYS",
-      "OCEANIC",
       "MARKS&SPENCER"
     ]
   },
   {
-    "id": "restaurantes",
-    "name": "Restaurantes & Delivery",
+    "id": "restaurants",
+    "name": "Restaurants & Delivery",
     "color": "#ea580c",
     "type": "debit",
     "keywords": [
-      "PARENTPAY",
-      "NANDOS",
-      "WAGAMAMA",
-      "ITSU",
-      "DELIVEROO",
-      "FIVE GUYS",
-      "REFECTORY",
       "MCDONALDS",
-      "KASPAS",
-      "WASABI"
+      "ITSU",
+      "WAGAMAMA",
+      "LANDSEC",
+      "NAKED CHIPS",
+      "WASABI",
+      "THE RANGE",
+      "DELIVEROO",
+      "COFF33",
+      "BOBATIGERS",
+      "NANDOS",
+      "LINDT",
+      "KASPAS"
     ]
   },
   {
-    "id": "servicos",
-    "name": "Serviços & Contas",
+    "id": "services",
+    "name": "Services & Bills",
     "color": "#2563eb",
     "type": "debit",
-    "keywords": [
-      "NETFLIX.COM",
-      "O2",
-      "SPOTIFY",
-      "DISNEY PLUS"
-    ]
+    "keywords": []
   },
   {
-    "id": "transporte",
-    "name": "Transporte",
+    "id": "transport",
+    "name": "Transport",
     "color": "#7c3aed",
     "type": "debit",
     "keywords": [
-      "TFL",
+      "TFL TRAVEL",
       "UBER *TRIP"
     ]
   },
   {
-    "id": "saude",
-    "name": "Saúde & Farmácia",
+    "id": "health",
+    "name": "Health & Pharmacy",
     "color": "#0891b2",
     "type": "debit",
     "keywords": [
-      "SUPERDRUG",
-      "BOOTS"
+      "TABEO",
+      "BOOTS",
+      "SUPERDRUG"
     ]
   },
   {
-    "id": "compras",
-    "name": "Compras (Casa/Roupas)",
+    "id": "shopping",
+    "name": "Shopping (Home/Clothes)",
     "color": "#ca8a04",
     "type": "debit",
-    "keywords": [
-      "RUSH GREEN LAUNDRY"
-    ]
+    "keywords": []
   },
   {
-    "id": "lazer",
-    "name": "Lazer & Viagens",
+    "id": "leisure",
+    "name": "Leisure & Travel",
     "color": "#db2777",
     "type": "debit",
     "keywords": [
-      "VUE",
+      "VUE CINEMAS",
       "SMYTHS TOYS",
-      "BNAE",
-      "BANDAI NAMCO"
+      "VUE ENTERTAINMENT"
     ]
   },
   {
-    "id": "transferencias",
-    "name": "Transferências",
+    "id": "transfers",
+    "name": "Transfers",
     "color": "#6b7280",
     "type": "debit",
     "keywords": []
   },
   {
-    "id": "receita",
-    "name": "Receita",
+    "id": "income",
+    "name": "Income",
     "color": "#059669",
     "type": "credit",
     "keywords": []
   },
   {
-    "id": "outros",
-    "name": "Outros",
+    "id": "other",
+    "name": "Other",
     "color": "#9ca3af",
     "type": "debit",
     "keywords": []
-  },
-  {
-    "id": "salario",
-    "name": "Salário",
-    "color": "#6366f1",
-    "type": "credit",
-    "keywords": []
-  },
-  {
-    "id": "extornos",
-    "name": "Extornos",
-    "color": "#64f293",
-    "type": "credit",
-    "keywords": []
-  },
-  {
-    "id": "mesada",
-    "name": "Mesada",
-    "color": "#f2c564",
-    "type": "debit",
-    "keywords": [
-      "REVOLUT"
-    ]
   }
 ]

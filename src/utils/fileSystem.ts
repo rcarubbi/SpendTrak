@@ -39,7 +39,8 @@ async function loadStoredHandle(): Promise<FileSystemDirectoryHandle | null> {
       req.onsuccess = () => resolve(req.result || null);
       req.onerror = () => reject(req.error);
     });
-  } catch {
+  } catch (err) {
+    console.error("fs: loadStoredHandle failed", err);
     return null;
   }
 }
@@ -73,7 +74,8 @@ export async function ensureDataDir(): Promise<FileSystemDirectoryHandle | null>
         return dirHandle;
       }
     }
-  } catch {
+  } catch (err) {
+    console.error("fs: ensureDataDir failed", err);
     dirHandle = null;
   }
   return null;
@@ -87,10 +89,6 @@ export async function pickDataDir(): Promise<FileSystemDirectoryHandle> {
   return handle;
 }
 
-export function getDirHandle(): FileSystemDirectoryHandle | null {
-  return dirHandle;
-}
-
 function monthFileName(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}.json`;
 }
@@ -102,7 +100,8 @@ export async function readJSON(filename: string): Promise<unknown | null> {
     const file = await fileHandle.getFile();
     const text = await file.text();
     return JSON.parse(text) as unknown;
-  } catch {
+  } catch (err) {
+    console.error("fs: readJSON failed for", filename, err);
     return null;
   }
 }
@@ -115,9 +114,15 @@ export async function writeJSON(filename: string, data: unknown): Promise<void> 
   await writable.close();
 }
 
+function isValidMonthData(data: unknown): data is MonthData {
+  if (!data || typeof data !== "object") return false;
+  const d = data as Record<string, unknown>;
+  return typeof d.year === "number" && typeof d.month === "number" && Array.isArray(d.transactions);
+}
+
 export async function readMonthData(year: number, month: number): Promise<MonthData | null> {
   const data = await readJSON(monthFileName(year, month));
-  return data as MonthData | null;
+  return isValidMonthData(data) ? data : null;
 }
 
 export async function writeMonthData(data: MonthData): Promise<void> {
@@ -144,7 +149,7 @@ export async function listAllMonthData(): Promise<MonthData[]> {
       if (data && typeof data === "object" && "transactions" in (data as Record<string, unknown>)) {
         results.push(data as MonthData);
       }
-    } catch { /* skip corrupt files */ }
+    } catch (err) { console.error("fs: listAllMonthData skip corrupt file", f, err); }
   }
   return results;
 }

@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons.svg'],
       manifest: {
-        name: 'Spending Tracker',
-        short_name: 'Gastos',
+        name: 'SpendTrak',
+        short_name: 'SpendTrak',
         description: 'Personal spending tracker and categorizer',
         theme_color: '#1e293b',
         background_color: '#f8fafc',

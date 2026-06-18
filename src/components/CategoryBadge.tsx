@@ -1,9 +1,10 @@
 import { useCategoryStore } from "../stores/categoryStore";
+import { CATEGORY_IDS } from "../constants";
 
 export default function CategoryBadge({ categoryId }: { categoryId: string }) {
   const cats = useCategoryStore((s) => s.categories);
   const cat = cats.find((c) => c.id === categoryId);
-  const fallback = cats.find((c) => c.id === "outros");
+  const fallback = cats.find((c) => c.id === CATEGORY_IDS.OTHER);
   const display = cat ?? fallback;
   if (!display) return null;
 

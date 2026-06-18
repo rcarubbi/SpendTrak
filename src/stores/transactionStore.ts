@@ -97,41 +97,35 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   reclassifyAll: async (categories, onProgress) => {
     const state = get();
     const entries = Object.entries(state.months);
-    const total = entries.reduce((s, [, m]) => s + m.transactions.filter((t) => !t.manual).length, 0);
+    const total = entries.reduce((s, [, m]) => s + m.transactions.length, 0);
     let processed = 0;
-    const newMonths = { ...state.months };
-    let anyChanged = false;
 
     for (const [key, monthData] of entries) {
       let changed = false;
       const newTxs = monthData.transactions.map((tx) => {
-        if (tx.manual) return tx;
         const newId = classify(tx.description, categories);
         processed++;
-        if (total > 0) onProgress?.(processed, total);
+        onProgress?.(processed, total);
         if (newId !== tx.categoryId) {
           changed = true;
-          return { ...tx, categoryId: newId };
+          return { ...tx, categoryId: newId, manual: false };
         }
         return tx;
       });
 
       if (changed) {
-        anyChanged = true;
         const updated: MonthData = { ...monthData, transactions: newTxs };
-        newMonths[key] = updated;
         await fs.writeMonthData(updated);
+        set((s) => ({ months: { ...s.months, [key]: updated } }));
       }
     }
-
-    if (anyChanged) set({ months: newMonths });
   },
 }));
 
 let _cachedMonths: Record<string, MonthData> | null = null;
 let _cachedTxs: Transaction[] = [];
 
-export function getAllTransactions(): Transaction[] {
+function getAllTransactions(): Transaction[] {
   const months = useTransactionStore.getState().months;
   if (_cachedMonths === months) return _cachedTxs;
   const keys = Object.keys(months).sort();
@@ -142,10 +136,6 @@ export function getAllTransactions(): Transaction[] {
   _cachedMonths = months;
   _cachedTxs = result;
   return result;
-}
-
-export function getUnclassifiedTransactions(): Transaction[] {
-  return getAllTransactions().filter((tx) => tx.categoryId === "outros");
 }
 
 export function getLoadedMonths(): string[] {

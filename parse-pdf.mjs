@@ -6,6 +6,7 @@ const MONTHS = {
   JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
 };
 
+const CATEGORY_INCOME = "income";
 const AMOUNT_RE = /(\d[\d,]*\.\d{2})/g;
 
 function parseAmounts(text) {
@@ -200,7 +201,7 @@ async function main() {
               amount: txAmount,
               description: desc,
               subcategory: "",
-              categoryId: isCredit ? "receita" : "",
+               categoryId: isCredit ? CATEGORY_INCOME : "",
               account: "BARCLAYS PDF",
               source: "",
             });

@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 data
+data/categories.json
+
+# Generated output files
+parse-output.txt
+parsed.csv

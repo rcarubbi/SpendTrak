@@ -21,6 +21,7 @@ export default function Statement() {
   const [reclassProgress, setReclassProgress] = useState<{ done: number; total: number } | null>(null);
   const [pendingReclass, setPendingReclass] = useState<{ tx: Transaction; newCategoryId: string } | null>(null);
   const [customKeyword, setCustomKeyword] = useState("");
+  const [saveKeywordRule, setSaveKeywordRule] = useState(true);
 
   const cats = useCategoryStore((s) => s.categories);
   const months = useTransactionStore((s) => s.months);
@@ -66,47 +67,90 @@ export default function Statement() {
     }
   }, [deleteTx]);
 
-  const handleReclassify = useCallback(async (tx: Transaction, newCategoryId: string, kwOverride: string) => {
+  const handleReclassify = useCallback(async (tx: Transaction, newCategoryId: string, kwOverride: string, shouldSaveKeyword: boolean) => {
     const oldCat = cats.find((c) => c.id === tx.categoryId);
     const newCat = cats.find((c) => c.id === newCategoryId);
-    if (oldCat && newCat) {
-      const matching = oldCat.keywords.filter((k) => matchKeyword(tx.description, k));
-      if (matching.length > 0) {
-        await updateCategory(oldCat.id, { keywords: oldCat.keywords.filter((k) => !matching.includes(k)) });
-      }
-      const keyword = kwOverride || extractKeyword(tx.description);
-      if (keyword) {
-        const kw = keyword.toUpperCase();
-        if (!newCat.keywords.some((k) => k.toUpperCase() === kw)) {
-          await updateCategory(newCat.id, { keywords: [...newCat.keywords, kw] });
-        }
-      }
+    
+    if (!oldCat || !newCat) {
+      return;
     }
-    const updatedTx = { ...tx, categoryId: newCategoryId, manual: true };
+
     const monthKey = tx.date.slice(0, 7);
     const [year, month] = monthKey.split("-").map(Number);
     const existing = loadMonthData(year, month);
-    if (existing) {
+    
+    if (!existing) {
+      return;
+    }
+
+    try {
+      // Only manage keywords if shouldSaveKeyword is true
+      if (shouldSaveKeyword) {
+        const matching = oldCat.keywords.filter((k) => matchKeyword(tx.description, k));
+
+        // Remove keywords from old category
+        if (matching.length > 0) {
+          const removedKeywords = oldCat.keywords.filter((k) => !matching.includes(k));
+          await updateCategory(oldCat.id, { keywords: removedKeywords });
+        }
+
+        // Add keyword to new category
+        const keyword = kwOverride || extractKeyword(tx.description);
+        if (keyword) {
+          const kw = keyword.toUpperCase();
+          const existingNormalized = newCat.keywords.map((k) => k.toUpperCase());
+          if (!existingNormalized.includes(kw)) {
+            await updateCategory(newCat.id, { keywords: [...newCat.keywords, kw] });
+          }
+        }
+      }
+
+      // Save transaction
+      const updatedTx = { ...tx, categoryId: newCategoryId, manual: true };
       await saveMonthData({ year, month, transactions: [updatedTx], uploadedAt: existing.uploadedAt });
+    } catch (error) {
+      if (shouldSaveKeyword) {
+        try {
+          await updateCategory(oldCat.id, { keywords: oldCat.keywords });
+          await updateCategory(newCat.id, { keywords: newCat.keywords });
+        } catch {
+          // rollback failed — no recovery possible
+        }
+      }
+      throw error;
     }
   }, [cats, updateCategory, saveMonthData]);
 
   const confirmReclassify = useCallback(async () => {
     if (!pendingReclass) return;
-    await handleReclassify(pendingReclass.tx, pendingReclass.newCategoryId, customKeyword);
-    setPendingReclass(null);
-    setCustomKeyword("");
-  }, [pendingReclass, customKeyword, handleReclassify]);
+    try {
+      await handleReclassify(pendingReclass.tx, pendingReclass.newCategoryId, customKeyword, saveKeywordRule);
+      setPendingReclass(null);
+      setCustomKeyword("");
+      setSaveKeywordRule(true);
+    } catch {
+      // Modal stays open for retry
+    }
+  }, [pendingReclass, customKeyword, saveKeywordRule, handleReclassify]);
 
   const handleReclassifyAll = useCallback(async () => {
+    const store = useTransactionStore.getState();
+    const reclassify = store.reclassifyAll;
+    const categories = useCategoryStore.getState().categories;
+    
     setLoading(true);
     setReclassProgress({ done: 0, total: 0 });
-    await reclassifyAll(cats, (done, total) => {
-      setReclassProgress({ done, total });
-    });
-    setReclassProgress(null);
-    setLoading(false);
-  }, [cats, reclassifyAll]);
+    try {
+      await reclassify(categories, (done, total) => {
+        setReclassProgress({ done, total });
+      });
+    } catch {
+      // swallow — progress clears in finally
+    } finally {
+      setReclassProgress(null);
+      setLoading(false);
+    }
+  }, []);
 
   const filtered = useMemo(() => {
     let result = [...txs];
@@ -132,47 +176,56 @@ export default function Statement() {
     const monthKey = tx.date.slice(0, 7);
     const [year, month] = monthKey.split("-").map(Number);
     const existing = loadMonthData(year, month);
-    if (existing) {
+    if (!existing) {
+      return;
+    }
+    try {
       const updatedTx = { ...tx, description: newDesc.trim() };
       await saveMonthData({ year, month, transactions: [updatedTx], uploadedAt: existing.uploadedAt });
+    } catch {
+      // swallow — description update not critical
     }
   }, [saveMonthData]);
 
   const mainColDefs: ColDef[] = [
     { field: "date", headerName: "Data", width: 110 },
     {
-      field: "description", headerName: "Descrição", flex: 2, minWidth: 200,
-      cellRenderer: (p: { data: Transaction }) => (
-        <input
-          defaultValue={p.data.description}
-          onBlur={(e) => handleEditDescription(p.data, e.target.value)}
-          className="w-full bg-transparent border-none outline-none text-sm"
-          style={{ color: "inherit" }}
-          aria-label="Editar descrição"
-          onClick={(e) => e.stopPropagation()}
-        />
+      field: "description", headerName: "Description", flex: 2, minWidth: 200,
+       cellRenderer: (p: { data: Transaction }) => (
+         <input
+           id={`description-input-${p.data.id}`}
+           name={`description-${p.data.id}`}
+           defaultValue={p.data.description}
+           onBlur={(e) => handleEditDescription(p.data, e.target.value)}
+           className="w-full bg-transparent border-none outline-none text-sm"
+           style={{ color: "inherit" }}
+            aria-label="Edit description"
+           onClick={(e) => e.stopPropagation()}
+         />
       ),
     },
     {
-      field: "amount", headerName: "Valor", width: 100, type: "rightAligned",
+      field: "amount", headerName: "Amount", width: 100, type: "rightAligned",
       valueFormatter: (p) => `£${p.value?.toFixed(2) ?? "0.00"}`,
     },
     {
-      field: "categoryId", headerName: "Categoria", width: 160,
-      cellRenderer: (p: { data: Transaction }) => (
-        <select
-          value={p.data.categoryId}
-          onChange={(e) => {
-              if (e.target.value !== p.data.categoryId) {
-                setPendingReclass({ tx: p.data, newCategoryId: e.target.value });
-                setCustomKeyword("");
-                (e.target as HTMLSelectElement).value = p.data.categoryId;
-            }
-          }}
-          className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 w-full bg-transparent"
-          style={{ color: "inherit" }}
-          onClick={(e) => e.stopPropagation()}
-        >
+      field: "categoryId", headerName: "Category", width: 160,
+       cellRenderer: (p: { data: Transaction }) => (
+         <select
+           id={`category-select-${p.data.id}`}
+           name={`category-${p.data.id}`}
+           value={p.data.categoryId}
+           onChange={(e) => {
+               if (e.target.value !== p.data.categoryId) {
+                 setPendingReclass({ tx: p.data, newCategoryId: e.target.value });
+                 setCustomKeyword("");
+                 (e.target as HTMLSelectElement).value = p.data.categoryId;
+             }
+           }}
+           className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 w-full bg-transparent"
+           style={{ color: "inherit" }}
+           onClick={(e) => e.stopPropagation()}
+         >
           {cats.map((c) => (
             <option key={c.id} value={c.id} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
               {c.name}
@@ -182,13 +235,13 @@ export default function Statement() {
       ),
     },
     {
-      field: "categoryId", headerName: "Tipo", width: 90,
+      field: "categoryId", headerName: "Type", width: 90,
       cellRenderer: (p: { data: Transaction }) =>
         creditCatIds.has(p.data.categoryId)
-          ? <span className="text-green-600 font-semibold text-xs">CRÉDITO</span>
-          : <span className="text-red-600 font-semibold text-xs">DÉBITO</span>,
+          ? <span className="text-green-600 font-semibold text-xs">CREDIT</span>
+          : <span className="text-red-600 font-semibold text-xs">DEBIT</span>,
     },
-    { field: "source", headerName: "Arquivo", width: 150 },
+    { field: "source", headerName: "File", width: 150 },
   ];
 
   return (
@@ -196,16 +249,16 @@ export default function Statement() {
       <style>{tagStyle}</style>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold dark:text-white">
-          Extrato
+          Statement
           {dupGroups.length > 0 && (
             <span className="text-sm font-normal text-amber-600 ml-3">
-              {dupGroups.length} grupo(s) com possíveis duplicatas
+              {dupGroups.length} group(s) with possible duplicates
             </span>
           )}
         </h1>
         <div className="text-gray-500 dark:text-white text-sm text-right">
-          <div>Despesas: £{debitTotal.toLocaleString()}</div>
-          {creditTotal > 0 && <div className="text-green-600">Receita: £{Math.round(creditTotal).toLocaleString()}</div>}
+          <div>Expenses: £{debitTotal.toLocaleString()}</div>
+          {creditTotal > 0 && <div className="text-green-600">Income: £{Math.round(creditTotal).toLocaleString()}</div>}
         </div>
       </div>
 
@@ -237,7 +290,7 @@ export default function Statement() {
         <DataGrid
           rows={filtered}
           colDefs={mainColDefs}
-          exportFilename="extrato-completo"
+          exportFilename="full-statement"
           rowClassRules={rowRules}
           loading={loading || !loaded}
           fillHeight
@@ -245,7 +298,7 @@ export default function Statement() {
       )}
 
       {!showDuplicates && filtered.length === 0 && (
-        <p className="text-center text-gray-400 dark:text-white mt-8">Nenhuma transação encontrada</p>
+        <p className="text-center text-gray-400 dark:text-white mt-8">No transactions found</p>
       )}
 
       {pendingReclass && (
@@ -255,8 +308,10 @@ export default function Statement() {
           customKeyword={customKeyword}
           onCustomKeywordChange={setCustomKeyword}
           autoKeyword={autoKeyword}
+          saveKeyword={saveKeywordRule}
+          onSaveKeywordChange={setSaveKeywordRule}
           onConfirm={confirmReclassify}
-          onCancel={() => { setPendingReclass(null); setCustomKeyword(""); }}
+          onCancel={() => { setPendingReclass(null); setCustomKeyword(""); setSaveKeywordRule(true); }}
         />
       )}
     </div>
