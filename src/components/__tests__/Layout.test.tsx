@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Layout from "../Layout";
 import { useUIStore } from "../../stores/uiStore";
+import { flushSync } from "react-dom";
 
 function renderLayout(initialRoute = "/") {
   return render(
@@ -81,4 +82,67 @@ it("renders Toaster component", () => {
 it("shows footer text", () => {
   renderLayout();
   expect(screen.getByText(/Track your spending/)).toBeInTheDocument();
+});
+
+it("does not navigate when already on /statement after search", async () => {
+  const user = userEvent.setup();
+  renderLayout("/statement");
+
+  const searchInput = screen.getByPlaceholderText("Search transactions...");
+  await user.type(searchInput, "test");
+  await new Promise((r) => setTimeout(r, 300));
+
+  expect(useUIStore.getState().searchQuery).toBe("test");
+});
+
+it("uses view transition for search when available", async () => {
+  const startViewTransition = vi.fn().mockImplementation((cb) => {
+    cb();
+    return { finished: Promise.resolve() };
+  });
+  (document as any).startViewTransition = startViewTransition;
+
+  const user = userEvent.setup();
+  renderLayout("/categories");
+
+  const searchInput = screen.getByPlaceholderText("Search transactions...");
+  await user.type(searchInput, "x");
+
+  // Wait for debounce to fire
+  await new Promise((r) => setTimeout(r, 300));
+
+  expect(startViewTransition).toHaveBeenCalled();
+  expect(document.documentElement.classList.contains("nav-forward")).toBe(false);
+
+  delete (document as any).startViewTransition;
+});
+
+it("closes sidebar on nav link click on mobile", async () => {
+  useUIStore.setState({ sidebarOpen: true });
+  const orig = window.innerWidth;
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: 600 });
+
+  const user = userEvent.setup();
+  renderLayout();
+  await user.click(screen.getByText("Statement"));
+
+  expect(useUIStore.getState().sidebarOpen).toBe(false);
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: orig });
+});
+
+it("triggers view transition on nav link click when available", async () => {
+  const startViewTransition = vi.fn().mockImplementation((cb) => {
+    cb();
+    return { finished: Promise.resolve() };
+  });
+  (document as any).startViewTransition = startViewTransition;
+
+  const user = userEvent.setup();
+  renderLayout();
+  await user.click(screen.getByText("Statement"));
+
+  expect(startViewTransition).toHaveBeenCalled();
+  expect(document.documentElement.classList.contains("nav-forward")).toBe(false);
+
+  delete (document as any).startViewTransition;
 });

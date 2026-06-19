@@ -59,6 +59,20 @@ it("calls onCancel when cancel clicked", async () => {
   expect(onCancel).toHaveBeenCalledOnce();
 });
 
+it("calls onCustomKeywordChange when keyword typed", async () => {
+  const onCustomKeywordChange = vi.fn();
+  const user = userEvent.setup();
+  render(<ReclassifyModal {...defaultProps} onCustomKeywordChange={onCustomKeywordChange} />);
+  const input = screen.getByPlaceholderText("MERCADO");
+  await user.type(input, "X");
+  expect(onCustomKeywordChange).toHaveBeenCalledWith("X");
+});
+
+it("shows fallback placeholder when autoKeyword empty", () => {
+  render(<ReclassifyModal {...defaultProps} autoKeyword="" />);
+  expect(screen.getByPlaceholderText("e.g. MERCADO")).toBeInTheDocument();
+});
+
 it("toggles save keyword checkbox", async () => {
   const onSaveKeywordChange = vi.fn();
   const user = userEvent.setup();
