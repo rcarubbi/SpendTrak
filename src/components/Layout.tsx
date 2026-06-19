@@ -1,5 +1,6 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { Toaster } from "react-hot-toast";
 import { useUIStore } from "../stores/uiStore";
 import {
@@ -34,7 +35,18 @@ export default function Layout({ children }: { children: ReactNode }) {
     debounceRef.current = setTimeout(() => {
       setSearchQuery(val);
       if (location.pathname !== "/statement") {
-        navigate("/statement");
+        if (typeof document.startViewTransition === "function") {
+          document.documentElement.classList.remove("nav-forward", "nav-back");
+          document.documentElement.classList.add("nav-forward");
+          const vt = document.startViewTransition(() => {
+            flushSync(() => navigate("/statement"));
+          });
+          vt.finished.finally(() => {
+            document.documentElement.classList.remove("nav-forward", "nav-back");
+          });
+        } else {
+          navigate("/statement");
+        }
       }
     }, 200);
   };
@@ -96,8 +108,18 @@ export default function Layout({ children }: { children: ReactNode }) {
                     : "text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200 border-l-[3px] border-transparent -ml-[1px]"
                 }`
               }
-              onClick={() => {
+              onClick={(e) => {
                 if (window.innerWidth < 768) toggleSidebar();
+                if (typeof document.startViewTransition !== "function") return;
+                e.preventDefault();
+                document.documentElement.classList.remove("nav-forward", "nav-back");
+                document.documentElement.classList.add("nav-forward");
+                const vt = document.startViewTransition(() => {
+                  flushSync(() => navigate(path));
+                });
+                vt.finished.finally(() => {
+                  document.documentElement.classList.remove("nav-forward", "nav-back");
+                });
               }}
             >
               <Icon className="w-5 h-5 shrink-0" />
@@ -150,7 +172,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </header>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 overflow-y-auto animate-fade-in">
+        <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 overflow-y-auto">
           {children}
         </div>
       </main>
