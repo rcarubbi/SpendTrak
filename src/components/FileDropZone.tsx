@@ -55,6 +55,7 @@ export default function FileDropZone({ dragging, providers, onDragOver, onDragLe
         accept={providers.map((p) => p.accept).join(",")}
         onChange={handleChange}
         className="hidden"
+        data-testid="file-input"
       />
     </label>
   );
