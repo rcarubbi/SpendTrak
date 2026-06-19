@@ -58,4 +58,85 @@ it("shows income when provided", () => {
   expect(screen.getByText(/Income:/)).toBeInTheDocument();
 });
 
+it("hides income section when income is 0", () => {
+  render(
+    <PieChartCard
+      title="Expenses"
+      data={data}
+      total={700}
+      income={0}
+      catColorMap={catColorMap}
+      isDark={false}
+      emptyText="No data"
+    />
+  );
+  expect(screen.queryByText(/Income:/)).not.toBeInTheDocument();
+});
+
+it("renders with dark mode", () => {
+  render(
+    <PieChartCard
+      title="Expenses"
+      data={data}
+      total={700}
+      income={100}
+      catColorMap={catColorMap}
+      isDark={true}
+      emptyText="No data"
+    />
+  );
+  expect(screen.getByText("Expenses")).toBeInTheDocument();
+});
+
+it("renders with missing color fallback", () => {
+  const partialMap = new Map([["Food", "#ef4444"]]);
+  render(
+    <PieChartCard
+      title="Expenses"
+      data={data}
+      total={700}
+      income={0}
+      catColorMap={partialMap}
+      isDark={false}
+      emptyText="No data"
+    />
+  );
+  expect(screen.getByText(/700/)).toBeInTheDocument();
+});
+
+it("renders pie elements for each data entry", () => {
+  render(
+    <PieChartCard
+      title="Expenses"
+      data={data}
+      total={700}
+      income={0}
+      catColorMap={catColorMap}
+      isDark={false}
+      emptyText="No data"
+    />
+  );
+  const cells = screen.getAllByTestId("cell");
+  expect(cells).toHaveLength(2);
+});
+
+it("shows label for category with missing name or percent", () => {
+  const partialData = [
+    { name: "Food", value: 500 },
+    { name: "", value: 200 },
+  ];
+  render(
+    <PieChartCard
+      title="Expenses"
+      data={partialData}
+      total={700}
+      income={0}
+      catColorMap={catColorMap}
+      isDark={false}
+      emptyText="No data"
+    />
+  );
+  const cells = screen.getAllByTestId("cell");
+  expect(cells).toHaveLength(2);
+});
 })

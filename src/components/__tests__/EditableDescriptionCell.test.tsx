@@ -31,4 +31,45 @@ it("calls onEdit on blur with new value", async () => {
   expect(onEdit).toHaveBeenCalledWith(tx, "new desc");
 });
 
+it("does not call onEdit when value unchanged", async () => {
+  const onEdit = vi.fn();
+  const user = userEvent.setup();
+  render(<EditableDescriptionCell data={tx} onEdit={onEdit} />);
+  const input = screen.getByDisplayValue("old desc");
+  await user.click(input);
+  await user.tab();
+  expect(onEdit).not.toHaveBeenCalled();
+});
+
+it("does not call onEdit when value is whitespace only", async () => {
+  const onEdit = vi.fn();
+  const user = userEvent.setup();
+  render(<EditableDescriptionCell data={tx} onEdit={onEdit} />);
+  const input = screen.getByDisplayValue("old desc");
+  await user.clear(input);
+  await user.type(input, "   ");
+  await user.tab();
+  expect(onEdit).not.toHaveBeenCalled();
+});
+
+it("calls onEdit with trimmed value", async () => {
+  const onEdit = vi.fn();
+  const user = userEvent.setup();
+  render(<EditableDescriptionCell data={tx} onEdit={onEdit} />);
+  const input = screen.getByDisplayValue("old desc");
+  await user.clear(input);
+  await user.type(input, "  new desc  ");
+  await user.tab();
+  expect(onEdit).toHaveBeenCalledWith(tx, "new desc");
+});
+
+it("calls onEdit on Enter key press", async () => {
+  const onEdit = vi.fn();
+  const user = userEvent.setup();
+  render(<EditableDescriptionCell data={tx} onEdit={onEdit} />);
+  const input = screen.getByDisplayValue("old desc");
+  await user.clear(input);
+  await user.type(input, "new desc{Enter}");
+  expect(onEdit).toHaveBeenCalledWith(tx, "new desc");
+});
 })

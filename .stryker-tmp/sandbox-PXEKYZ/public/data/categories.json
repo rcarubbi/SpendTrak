@@ -1,0 +1,86 @@
+[
+  {
+    "id": "housing",
+    "name": "Housing",
+    "color": "#dc2626",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "education",
+    "name": "Education",
+    "color": "#65a30d",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "supermarket",
+    "name": "Supermarket",
+    "color": "#16a34a",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "restaurants",
+    "name": "Restaurants & Delivery",
+    "color": "#ea580c",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "services",
+    "name": "Services & Bills",
+    "color": "#2563eb",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "transport",
+    "name": "Transport",
+    "color": "#7c3aed",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "health",
+    "name": "Health & Pharmacy",
+    "color": "#0891b2",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "shopping",
+    "name": "Shopping (Home/Clothes)",
+    "color": "#ca8a04",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "leisure",
+    "name": "Leisure & Travel",
+    "color": "#db2777",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "transfers",
+    "name": "Transfers",
+    "color": "#6b7280",
+    "type": "debit",
+    "keywords": []
+  },
+  {
+    "id": "income",
+    "name": "Income",
+    "color": "#059669",
+    "type": "credit",
+    "keywords": []
+  },
+  {
+    "id": "other",
+    "name": "Other",
+    "color": "#9ca3af",
+    "type": "debit",
+    "keywords": []
+  }
+]
