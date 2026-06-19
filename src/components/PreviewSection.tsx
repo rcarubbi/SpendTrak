@@ -33,13 +33,13 @@ interface PreviewSectionProps {
 
 export default function PreviewSection({ pending, pendingDuplicates, rowClassRules, onConfirm, onCancel }: PreviewSectionProps) {
   const gridRef = useRef<HTMLDivElement>(null);
-  const [gridHeight, setGridHeight] = useState(400);
+  const [gridHeight, setGridHeight] = useState(340);
 
   useEffect(() => {
     const calc = () => {
       if (!gridRef.current) return;
       const rect = gridRef.current.getBoundingClientRect();
-      setGridHeight(Math.max(100, Math.floor(window.innerHeight - rect.top - 24)));
+      setGridHeight(Math.max(100, Math.floor(window.innerHeight - rect.top - 124)));
     };
 
     calc();
