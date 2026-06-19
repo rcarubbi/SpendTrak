@@ -7,6 +7,7 @@ const providers = [
   { id: "barclays-pdf", name: "Barclays PDF", accept: ".pdf" },
 ];
 
+describe("ProviderSelector", { tags: ["unit"] }, () => {
 it("renders auto-detect and provider options", () => {
   render(<ProviderSelector selectedProvider="auto" providers={providers} onChange={vi.fn()} />);
   const select = screen.getByRole("combobox");
@@ -22,3 +23,5 @@ it("calls onChange when selection changes", async () => {
   await user.selectOptions(screen.getByRole("combobox"), "barclays-csv");
   expect(onChange).toHaveBeenCalledWith("barclays-csv");
 });
+
+})

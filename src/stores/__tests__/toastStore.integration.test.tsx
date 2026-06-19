@@ -24,6 +24,7 @@ vi.mock("react-hot-toast", async () => {
   };
 });
 
+describe("toastStore.integration", { tags: ["integration"] }, () => {
 afterEach(() => {
   const root = document.getElementById("toast-root");
   if (root) root.remove();
@@ -79,3 +80,5 @@ describe("toastError integration", () => {
     expect(screen.getByLabelText("Dismiss")).toBeInTheDocument();
   });
 });
+
+})

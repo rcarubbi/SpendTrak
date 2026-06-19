@@ -11,6 +11,7 @@ const catColorMap = new Map([
   ["Transport", "#3b82f6"],
 ]);
 
+describe("MonthlyBarChartCard", { tags: ["unit"] }, () => {
 it("renders chart with data", () => {
   render(
     <MonthlyBarChartCard
@@ -36,3 +37,5 @@ it("shows empty message when no data", () => {
   );
   expect(screen.getByText("Sem dados")).toBeInTheDocument();
 });
+
+})

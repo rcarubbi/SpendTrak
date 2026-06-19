@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { matchKeyword, classify, extractKeyword } from "../classify";
 import type { Category } from "../../types";
 
-describe("matchKeyword", () => {
+describe("matchKeyword", { tags: ["unit"] }, () => {
   it("matches keyword at start of string", () => {
     expect(matchKeyword("TFL CARD PAYMENT", "TFL")).toBe(true);
   });

@@ -10,6 +10,7 @@ const legacyCat = {
   id: "transport", name: "Transport", color: "#3b82f6", keywords: [],
 } as unknown as Category;
 
+describe("categoryStore", { tags: ["unit"] }, () => {
 beforeEach(async () => {
   useCategoryStore.setState({ categories: [], loaded: false });
   const fs = await import("../../utils/fileSystem");
@@ -124,3 +125,5 @@ describe("categoryStore", () => {
     expect(useCategoryStore.getState().categories[0].type).toBeUndefined();
   });
 });
+
+})

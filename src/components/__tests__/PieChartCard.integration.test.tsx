@@ -47,7 +47,7 @@ const catColorMap = new Map([
   ["Transport", "#3b82f6"],
 ]);
 
-describe("PieChartCard integration", () => {
+describe("PieChartCard integration", { tags: ["integration"] }, () => {
   it("renders with data and dark mode", () => {
     render(
       <PieChartCard

@@ -24,6 +24,7 @@ const defaultProps = {
   onRemoveKeyword: vi.fn(),
 };
 
+describe("CategoryCard", { tags: ["unit"] }, () => {
 it("renders category name and details", () => {
   render(<CategoryCard {...defaultProps} />);
   expect(screen.getByText("Food")).toBeInTheDocument();
@@ -96,3 +97,5 @@ it("calls onFinishEdit when editing input loses focus", async () => {
   await user.tab();
   expect(onFinishEdit).toHaveBeenCalledWith("food", "Food");
 });
+
+})

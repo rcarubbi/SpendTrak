@@ -11,6 +11,7 @@ const catColorMap = new Map([
   ["Transport", "#3b82f6"],
 ]);
 
+describe("PieChartCard", { tags: ["unit"] }, () => {
 it("renders title and totals", () => {
   render(
     <PieChartCard
@@ -56,3 +57,5 @@ it("shows income when provided", () => {
   );
   expect(screen.getByText(/Income:/)).toBeInTheDocument();
 });
+
+})

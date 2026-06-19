@@ -21,6 +21,7 @@ const defaultProps = {
   dupCount: 3,
 };
 
+describe("FilterBar", { tags: ["unit"] }, () => {
 it("renders filter controls", () => {
   render(<FilterBar {...defaultProps} />);
   expect(screen.getByText("All months")).toBeInTheDocument();
@@ -58,3 +59,5 @@ it("shows show all when duplicates visible", () => {
   render(<FilterBar {...defaultProps} showDuplicates={true} />);
   expect(screen.getByText("⇤ Show all")).toBeInTheDocument();
 });
+
+})

@@ -7,6 +7,7 @@ const colDefs = [
   { field: "name", headerName: "Name" },
 ];
 
+describe("DataGrid", { tags: ["unit"] }, () => {
 it("renders mock ag-grid with rows and columns", () => {
   render(<DataGrid rows={rows} colDefs={colDefs} />);
   const grid = screen.getByTestId("ag-grid");
@@ -36,3 +37,5 @@ it("renders with custom height", () => {
   const { container } = render(<DataGrid rows={rows} colDefs={colDefs} height={500} />);
   expect(container.querySelector('[style*="height"]')).toBeInTheDocument();
 });
+
+})

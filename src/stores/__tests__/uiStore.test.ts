@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useUIStore } from "../uiStore";
 
+describe("uiStore", { tags: ["unit"] }, () => {
 beforeEach(() => {
   useUIStore.setState({ theme: "system", sidebarOpen: false, searchQuery: "" });
   localStorage.clear();
@@ -82,3 +83,5 @@ describe("uiStore", () => {
     window.matchMedia = origMatchMedia;
   });
 });
+
+})

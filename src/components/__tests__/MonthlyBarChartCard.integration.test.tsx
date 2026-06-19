@@ -47,7 +47,7 @@ const catColorMap = new Map([
   ["Transport", "#3b82f6"],
 ]);
 
-describe("MonthlyBarChartCard integration", () => {
+describe("MonthlyBarChartCard integration", { tags: ["integration"] }, () => {
   it("renders chart with dark mode", () => {
     render(
       <MonthlyBarChartCard

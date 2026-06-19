@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CategorySelectButton from "../CategorySelectButton";
 
+describe("CategorySelectButton", { tags: ["unit"] }, () => {
 it("renders button with name", () => {
   render(<CategorySelectButton name="Food" color="#ef4444" onClick={vi.fn()} />);
   const btn = screen.getByText("Food");
@@ -29,3 +30,5 @@ it("changes background on hover and resets on leave", async () => {
   expect(btn).toHaveStyle({ color: "#ef4444" });
   expect(btn.style.background).toBe("");
 });
+
+})

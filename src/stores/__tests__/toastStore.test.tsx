@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { toastSuccess, toastError } from "../toastStore";
 
-describe("toastSuccess", () => {
+describe("toastSuccess", { tags: ["unit"] }, () => {
   it("calls toast.success with message and duration", async () => {
     const toast = await import("react-hot-toast");
     toastSuccess("Category created");

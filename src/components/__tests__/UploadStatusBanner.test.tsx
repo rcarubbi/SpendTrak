@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import UploadStatusBanner from "../UploadStatusBanner";
 
+describe("UploadStatusBanner", { tags: ["unit"] }, () => {
 it("renders nothing when status empty", () => {
   const { container } = render(<UploadStatusBanner status="" loading={false} />);
   expect(container.firstChild).toBeNull();
@@ -22,3 +23,5 @@ it("renders spinner when loading", () => {
   const spinner = document.querySelector(".animate-spin");
   expect(spinner).toBeInTheDocument();
 });
+
+})

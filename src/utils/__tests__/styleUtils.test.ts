@@ -7,7 +7,7 @@ const cats: Category[] = [
   { id: "transport", name: "Transport", color: "#3b82f6", type: "debit", keywords: [] },
 ];
 
-describe("catStyleTag", () => {
+describe("catStyleTag", { tags: ["unit"] }, () => {
   it("generates CSS rules for each category", () => {
     const css = catStyleTag(cats);
     expect(css).toContain(".ag-row-cat-food");

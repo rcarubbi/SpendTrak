@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import CategoryFormModal from "../CategoryFormModal";
 import { useCategoryStore } from "../../stores/categoryStore";
 
+describe("CategoryFormModal", { tags: ["unit"] }, () => {
 beforeEach(() => {
   useCategoryStore.setState({ categories: [], loaded: true });
 });
@@ -53,3 +54,5 @@ it("does not create category with duplicate id", async () => {
   expect(cats).toHaveLength(1);
   expect(onClose).not.toHaveBeenCalled();
 });
+
+})

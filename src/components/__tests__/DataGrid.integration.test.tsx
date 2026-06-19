@@ -37,7 +37,7 @@ const colDefs = [
   { field: "name", headerName: "Name" },
 ];
 
-describe("DataGrid integration", () => {
+describe("DataGrid integration", { tags: ["integration"] }, () => {
   it("renders grid and export button", () => {
     render(<DataGrid rows={rows} colDefs={colDefs} />);
     expect(screen.getByTestId("ag-grid")).toBeInTheDocument();

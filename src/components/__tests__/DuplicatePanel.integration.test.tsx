@@ -5,6 +5,7 @@ import DuplicatePanel from "../DuplicatePanel";
 import { useCategoryStore } from "../../stores/categoryStore";
 import type { Transaction } from "../../types";
 
+describe("DuplicatePanel.integration", { tags: ["integration"] }, () => {
 beforeEach(() => {
   useCategoryStore.setState({
     categories: [
@@ -88,3 +89,5 @@ describe("DuplicatePanel integration", () => {
     expect(screen.getByText("No duplicates found")).toBeInTheDocument();
   });
 });
+
+})

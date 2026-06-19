@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import StatementHeader from "../StatementHeader";
 
+describe("StatementHeader", { tags: ["unit"] }, () => {
 it("renders debit total", () => {
   render(<StatementHeader dupGroupsLength={0} debitTotal={500} creditTotal={0} />);
   expect(screen.getByText("Statement")).toBeInTheDocument();
@@ -26,3 +27,5 @@ it("hides income when creditTotal is 0", () => {
   render(<StatementHeader dupGroupsLength={0} debitTotal={500} creditTotal={0} />);
   expect(screen.queryByText("Income:")).not.toBeInTheDocument();
 });
+
+})

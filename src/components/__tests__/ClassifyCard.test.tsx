@@ -20,6 +20,7 @@ const defaultProps = {
   onClassify: vi.fn(),
 };
 
+describe("ClassifyCard", { tags: ["unit"] }, () => {
 it("renders description and stats", () => {
   render(<ClassifyCard {...defaultProps} />);
   expect(screen.getByText("DEBIT MERCADO LISBON")).toBeInTheDocument();
@@ -63,3 +64,5 @@ it("shows custom keyword value", () => {
   render(<ClassifyCard {...defaultProps} customKeyword="CUSTOM" />);
   expect(screen.getByDisplayValue("CUSTOM")).toBeInTheDocument();
 });
+
+})

@@ -15,6 +15,7 @@ const pending = {
 
 const rowClassRules = { "row-red": () => true };
 
+describe("PreviewSection", { tags: ["unit"] }, () => {
 it("renders nothing when pending is null", () => {
   const { container } = render(
     <PreviewSection pending={null} pendingDuplicates={[]} rowClassRules={rowClassRules} onConfirm={vi.fn()} onCancel={vi.fn()} />
@@ -57,3 +58,5 @@ it("shows duplicate warning when pendingDuplicates exist", () => {
   );
   expect(screen.getByText(/already exist/)).toBeInTheDocument();
 });
+
+})

@@ -9,6 +9,7 @@ const tx: Transaction = {
   subcategory: "", categoryId: "old", account: "acc", source: "csv",
 };
 
+describe("ReclassifyModal", { tags: ["unit"] }, () => {
 beforeEach(() => {
   useCategoryStore.setState({
     categories: [
@@ -81,3 +82,5 @@ it("toggles save keyword checkbox", async () => {
   await user.click(checkbox);
   expect(onSaveKeywordChange).toHaveBeenCalledWith(false);
 });
+
+})

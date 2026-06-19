@@ -11,6 +11,7 @@ const defaultProps = {
   onMonthChange: vi.fn(),
 };
 
+describe("YearMonthFilter", { tags: ["unit"] }, () => {
 it("renders year and month selects", () => {
   render(<YearMonthFilter {...defaultProps} />);
   expect(screen.getByText("2024")).toBeInTheDocument();
@@ -34,3 +35,5 @@ it("calls onMonthChange when month changes", async () => {
   await user.selectOptions(monthSelect, "Feb");
   expect(onMonthChange).toHaveBeenCalledWith("Feb");
 });
+
+})

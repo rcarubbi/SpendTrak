@@ -13,6 +13,7 @@ function renderLayout(initialRoute = "/") {
   );
 }
 
+describe("Layout", { tags: ["unit"] }, () => {
 beforeEach(() => {
   useUIStore.setState({ theme: "system", sidebarOpen: false, searchQuery: "" });
   localStorage.clear();
@@ -146,3 +147,5 @@ it("triggers view transition on nav link click when available", async () => {
 
   delete (document as any).startViewTransition;
 });
+
+})

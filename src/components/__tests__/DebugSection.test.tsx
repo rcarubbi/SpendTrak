@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import DebugSection from "../DebugSection";
 
+describe("DebugSection", { tags: ["unit"] }, () => {
 it("renders nothing when debug empty", () => {
   const { container } = render(<DebugSection debug="" />);
   expect(container.firstChild).toBeNull();
@@ -11,3 +12,5 @@ it("renders debug content in details element", () => {
   expect(screen.getByText("Debug")).toBeInTheDocument();
   expect(screen.getByText("some debug text")).toBeInTheDocument();
 });
+
+})

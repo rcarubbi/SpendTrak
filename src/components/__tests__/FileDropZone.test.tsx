@@ -15,6 +15,7 @@ const defaultProps = {
   onFilesSelected: vi.fn(),
 };
 
+describe("FileDropZone", { tags: ["unit"] }, () => {
 it("renders drop zone", () => {
   render(<FileDropZone {...defaultProps} />);
   expect(screen.getByText("Drag files or click to select")).toBeInTheDocument();
@@ -35,3 +36,5 @@ it("calls onFilesSelected when file input changes", async () => {
   await user.upload(input, file);
   expect(onFilesSelected).toHaveBeenCalledOnce();
 });
+
+})

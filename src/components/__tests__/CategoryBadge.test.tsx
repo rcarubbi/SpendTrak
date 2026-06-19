@@ -7,6 +7,7 @@ const testCats = [
   { id: "other", name: "Other", color: "#6b7280", type: "debit" as const, keywords: [] },
 ];
 
+describe("CategoryBadge", { tags: ["unit"] }, () => {
 beforeEach(() => {
   useCategoryStore.setState({ categories: testCats, loaded: true });
 });
@@ -28,3 +29,5 @@ it("returns null when no categories loaded", () => {
   const { container } = render(<CategoryBadge categoryId="food" />);
   expect(container.firstChild).toBeNull();
 });
+
+})

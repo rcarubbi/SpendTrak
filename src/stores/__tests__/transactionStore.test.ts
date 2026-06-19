@@ -11,6 +11,7 @@ const mockMonth: MonthData = {
   year: 2024, month: 1, transactions: [mockTx], uploadedAt: "2024-01-01T00:00:00Z",
 };
 
+describe("transactionStore", { tags: ["unit"] }, () => {
 beforeEach(() => {
   useTransactionStore.setState({ months: {}, loaded: false });
   const fs = vi.mocked(vi.importActual("../../utils/fileSystem"));
@@ -182,3 +183,5 @@ describe("getPossibleDuplicates", () => {
     expect(result[0].key).toContain("2024-01-01");
   });
 });
+
+})

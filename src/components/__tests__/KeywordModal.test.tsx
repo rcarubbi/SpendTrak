@@ -8,6 +8,7 @@ const cat = {
   keywords: ["MERCADO"],
 };
 
+describe("KeywordModal", { tags: ["unit"] }, () => {
 beforeEach(() => {
   useCategoryStore.setState({ categories: [cat], loaded: true });
 });
@@ -59,3 +60,5 @@ it("does not add keyword when category not found", async () => {
   const cats = useCategoryStore.getState().categories;
   expect(cats[0].keywords).toEqual(["MERCADO"]);
 });
+
+})

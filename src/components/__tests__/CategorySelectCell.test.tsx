@@ -19,6 +19,7 @@ const categories: Category[] = [
   { id: "transport", name: "Transport", color: "#3b82f6", type: "debit", keywords: [] },
 ];
 
+describe("CategorySelectCell", { tags: ["unit"] }, () => {
 it("renders select with current category selected", () => {
   render(<CategorySelectCell data={tx} categories={categories} onReclassify={vi.fn()} />);
   const select = screen.getByRole("combobox");
@@ -33,3 +34,5 @@ it("calls onReclassify when different option selected", async () => {
   await user.selectOptions(select, "transport");
   expect(onReclassify).toHaveBeenCalledWith(tx, "transport");
 });
+
+})

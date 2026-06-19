@@ -7,6 +7,10 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.tsx"],
     css: false,
+    tags: [
+      { name: "unit", description: "Unit tests" },
+      { name: "integration", description: "Integration tests" },
+    ],
     globals: true,
     coverage: {
       provider: "v8",

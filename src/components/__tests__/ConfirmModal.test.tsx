@@ -10,6 +10,7 @@ const defaultProps = {
   onCancel: vi.fn(),
 };
 
+describe("ConfirmModal", { tags: ["unit"] }, () => {
 it("renders nothing when show is false", () => {
   const { container } = render(<ConfirmModal {...defaultProps} show={false} />);
   expect(container.firstChild).toBeNull();
@@ -59,3 +60,5 @@ it("uses custom confirm label", () => {
   render(<ConfirmModal {...defaultProps} confirmLabel="Yes, delete" />);
   expect(screen.getByText("Yes, delete")).toBeInTheDocument();
 });
+
+})

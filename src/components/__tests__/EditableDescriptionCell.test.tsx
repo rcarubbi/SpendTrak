@@ -14,6 +14,7 @@ const tx: Transaction = {
   source: "csv",
 };
 
+describe("EditableDescriptionCell", { tags: ["unit"] }, () => {
 it("renders input with default value", () => {
   render(<EditableDescriptionCell data={tx} onEdit={vi.fn()} />);
   expect(screen.getByDisplayValue("old desc")).toBeInTheDocument();
@@ -29,3 +30,5 @@ it("calls onEdit on blur with new value", async () => {
   await user.tab();
   expect(onEdit).toHaveBeenCalledWith(tx, "new desc");
 });
+
+})

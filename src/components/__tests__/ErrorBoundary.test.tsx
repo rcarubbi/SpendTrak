@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ErrorBoundary from "../ErrorBoundary";
 
+describe("ErrorBoundary", { tags: ["unit"] }, () => {
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -52,3 +53,5 @@ it("retry resets error state", async () => {
   expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
   expect(screen.getByText("recovered")).toBeInTheDocument();
 });
+
+})
