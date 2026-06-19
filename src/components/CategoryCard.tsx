@@ -19,68 +19,102 @@ export default function CategoryCard({
   onEditColor, onEditType, onDelete, onAddKeyword, onRemoveKeyword,
 }: CategoryCardProps) {
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
-      <div className="flex items-center gap-3 mb-2 flex-wrap">
-        <input
-          id={`color-input-${cat.id}`}
-          name={`color-${cat.id}`}
-          type="color"
-          value={cat.color}
-          onChange={(e) => onEditColor(cat.id, e.target.value)}
-          className="w-8 h-8 border-none cursor-pointer p-0 shrink-0"
-        />
-        {editing === cat.id ? (
+    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+      <div className="border-l-[3px] p-4" style={{ borderLeftColor: cat.color }}>
+        {/* Header row */}
+        <div className="flex items-center gap-2.5">
           <input
-            id={`name-input-${cat.id}`}
-            name={`name-${cat.id}`}
-            defaultValue={cat.name}
-            onBlur={(e) => onFinishEdit(cat.id, e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && onCancelEdit()}
-            autoFocus
-            className="text-base font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-0.5"
+            id={`color-input-${cat.id}`}
+            name={`color-${cat.id}`}
+            type="color"
+            value={cat.color}
+            onChange={(e) => onEditColor(cat.id, e.target.value)}
+            className="w-7 h-7 rounded-lg cursor-pointer border-0 p-0 shrink-0"
           />
-        ) : (
-          <span className="font-semibold text-base cursor-pointer dark:text-gray-100" onClick={() => onStartEdit(cat.id)}>
-            {cat.name}
+          {editing === cat.id ? (
+            <input
+              id={`name-input-${cat.id}`}
+              name={`name-${cat.id}`}
+              defaultValue={cat.name}
+              onBlur={(e) => onFinishEdit(cat.id, e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onCancelEdit()}
+              autoFocus
+              className="text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-2 py-1 flex-1 min-w-0"
+            />
+          ) : (
+            <span
+              className="font-semibold text-sm cursor-pointer dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-1 min-w-0 truncate"
+              onClick={() => onStartEdit(cat.id)}
+              title="Click to rename"
+            >
+              {cat.name}
+            </span>
+          )}
+          <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 hidden sm:inline">
+            {cat.keywords.length} kw
           </span>
-        )}
-        <span className="text-gray-400 dark:text-gray-500 text-xs">({cat.keywords.length} keywords)</span>
-        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${cat.type === "credit" ? "text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300" : "text-red-700 bg-red-100 dark:bg-red-900 dark:text-red-300"}`}>
-          {cat.type === "credit" ? "CREDIT" : "DEBIT"}
-        </span>
-        {cat.id !== CATEGORY_IDS.OTHER && (
-          <>
+          {cat.id !== CATEGORY_IDS.OTHER ? (
             <select
               id={`type-select-${cat.id}`}
               name={`type-${cat.id}`}
               value={cat.type}
               onChange={(e) => onEditType(cat.id, e.target.value as CategoryType)}
-              className="text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-1 py-0.5"
+              className={`text-xs rounded-full px-2.5 py-0.5 font-semibold border border-transparent cursor-pointer transition-colors shrink-0 ${
+                cat.type === "credit"
+                  ? "text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/50"
+                  : "text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/50"
+              }`}
             >
-              <option value="debit">Debit</option>
-              <option value="credit">Credit</option>
+              <option value="debit" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">DEBIT</option>
+              <option value="credit" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">CREDIT</option>
             </select>
-            <button onClick={() => onDelete(cat.id)} className="ml-auto text-red-600 dark:text-red-400 text-xs font-semibold cursor-pointer hover:text-red-800 dark:hover:text-red-300 transition-colors">
+          ) : (
+            <span className={`text-xs rounded-full px-2.5 py-0.5 font-semibold shrink-0 ${
+              cat.type === "credit"
+                ? "text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/50"
+                : "text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/50"
+            }`}>
+              {cat.type === "credit" ? "CREDIT" : "DEBIT"}
+            </span>
+          )}
+          {cat.id !== CATEGORY_IDS.OTHER && (
+            <button
+              onClick={() => onDelete(cat.id)}
+              className="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 cursor-pointer transition-colors shrink-0 font-medium"
+            >
               Delete
             </button>
-          </>
-        )}
-      </div>
+          )}
+        </div>
 
-      <div className="flex flex-wrap gap-1">
-        {cat.keywords.map((kw) => (
-          <span key={kw} className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full text-xs dark:text-gray-200">
-            {kw}
-            {cat.id !== CATEGORY_IDS.OTHER && (
-              <button onClick={() => onRemoveKeyword(cat.id, kw)} className="border-none bg-none cursor-pointer text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-sm p-0 leading-none">
-                ×
-              </button>
-            )}
-          </span>
-        ))}
-        <button onClick={() => onAddKeyword(cat.id)} className="border border-dashed border-gray-300 dark:border-gray-600 rounded-full px-2 py-0.5 text-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-gray-300">
-          +
-        </button>
+        {/* Keywords */}
+        <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+          {cat.keywords.map((kw) => (
+            <span
+              key={kw}
+              className="inline-flex items-center gap-1.5 bg-gray-100/80 dark:bg-gray-700/80 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs dark:text-gray-200 border border-gray-200/50 dark:border-gray-600/30 hover:scale-105 transition-transform"
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: cat.color }} />
+              {kw}
+              {cat.id !== CATEGORY_IDS.OTHER && (
+                <button
+                  onClick={() => onRemoveKeyword(cat.id, kw)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer text-sm leading-none p-0 border-0 bg-transparent"
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          ))}
+          {cat.id !== CATEGORY_IDS.OTHER && (
+            <button
+              onClick={() => onAddKeyword(cat.id)}
+              className="inline-flex items-center gap-1 border border-dashed border-gray-300 dark:border-gray-600 px-2.5 py-1 rounded-full text-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-gray-300"
+            >
+              + Add
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

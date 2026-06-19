@@ -10,7 +10,7 @@ export default function CategoryBadge({ categoryId }: { categoryId: string }) {
 
   return (
     <span
-      className="inline-block px-2 py-0.5 rounded text-xs font-semibold text-white whitespace-nowrap"
+      className="inline-block px-2 py-0.5 rounded text-xs font-semibold text-white whitespace-nowrap shadow-sm"
       style={{ background: display.color }}
     >
       {display.name}

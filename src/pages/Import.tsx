@@ -12,8 +12,9 @@ import FileDropZone from "../components/FileDropZone";
 import UploadStatusBanner from "../components/UploadStatusBanner";
 import PreviewSection from "../components/PreviewSection";
 import DebugSection from "../components/DebugSection";
+import ConfirmModal from "../components/ConfirmModal";
 
-export default function Upload() {
+export default function Import() {
   const [selectedProvider, setSelectedProvider] = useState("auto");
   const [pending, setPending] = useState<{
     transactions: Transaction[];
@@ -26,6 +27,7 @@ export default function Upload() {
   const [loading, setLoading] = useState(false);
   const [debug, setDebug] = useState("");
   const [dragging, setDragging] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const cats = useCategoryStore((s) => s.categories);
   const months = useTransactionStore((s) => s.months);
@@ -106,7 +108,7 @@ export default function Upload() {
         provider: providerName,
         debug: debugLogs.join("\n\n"),
       });
-      setStatus(`Ready to import: ${allTxs.length} transactions across ${allMonths.size} months`);
+      setStatus("");
     } else if (!hasError) {
       setStatus("No transactions found in selected files.");
     }
@@ -170,10 +172,14 @@ export default function Upload() {
   }, [pending, saveMonthData]);
 
   const handleCancel = () => {
-    if (!confirm("Discard preview?")) return;
+    setShowConfirm(true);
+  };
+
+  const handleConfirmDiscard = () => {
     setPending(null);
     setStatus("");
     setDebug("");
+    setShowConfirm(false);
   };
 
   const allTxs = useMemo(() => Object.values(months).flatMap((m) => m.transactions), [months]);
@@ -199,30 +205,49 @@ export default function Upload() {
   }, [pending, months]);
 
   return (
-    <div>
+    <div className="flex flex-col gap-6">
       <style>{tagStyle}</style>
-      <h1 className="text-2xl font-bold mb-1 dark:text-gray-100">Upload</h1>
-      <p className="text-gray-500 dark:text-gray-400 mb-6">
-        {allTxs.length} transactions loaded · Total: £{debitTotal.toLocaleString()}
-      </p>
 
-      <ProviderSelector
-        selectedProvider={selectedProvider}
-        providers={providers}
-        onChange={setSelectedProvider}
-      />
+      {/* Header card */}
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm p-4 md:p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Import</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              Upload bank statements (CSV, PDF) to track your spending
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{allTxs.length} transactions</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Total: £{debitTotal.toLocaleString()}</div>
+          </div>
+        </div>
+      </div>
 
-      <FileDropZone
-        dragging={dragging}
-        providers={providers}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onFilesSelected={processFiles}
-      />
+      {/* Provider + Drop zone card */}
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm p-4 md:p-5">
+        <div className="flex items-center gap-4 mb-4">
+          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Provider</span>
+          <ProviderSelector
+            selectedProvider={selectedProvider}
+            providers={providers}
+            onChange={setSelectedProvider}
+          />
+        </div>
+        <FileDropZone
+          dragging={dragging}
+          providers={providers}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onFilesSelected={processFiles}
+        />
+      </div>
 
+      {/* Status */}
       <UploadStatusBanner status={status} loading={loading} />
 
+      {/* Preview */}
       <PreviewSection
         pending={pending}
         pendingDuplicates={pendingDuplicates}
@@ -231,7 +256,18 @@ export default function Upload() {
         onCancel={handleCancel}
       />
 
+      {/* Debug */}
       <DebugSection debug={debug} />
+
+      <ConfirmModal
+        show={showConfirm}
+        title="Discard preview?"
+        message="This will discard all parsed transactions. You can re-upload files later."
+        confirmLabel="Discard"
+        variant="danger"
+        onConfirm={handleConfirmDiscard}
+        onCancel={() => setShowConfirm(false)}
+      />
     </div>
   );
 }

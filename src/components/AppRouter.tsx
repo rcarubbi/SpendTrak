@@ -5,7 +5,7 @@ import ErrorBoundary from "./ErrorBoundary";
 
 const Dashboard = lazy(() => import("../pages/Dashboard"));
 const Categories = lazy(() => import("../pages/Categories"));
-const Upload = lazy(() => import("../pages/Upload"));
+const ImportPage = lazy(() => import("../pages/Import"));
 const Classify = lazy(() => import("../pages/Classify"));
 const Statement = lazy(() => import("../pages/Statement"));
 const NotFound = lazy(() => import("../pages/NotFound"));
@@ -30,7 +30,7 @@ export default function AppRouter() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/categories" element={<Categories />} />
-              <Route path="/upload" element={<Upload />} />
+              <Route path="/import" element={<ImportPage />} />
               <Route path="/classify" element={<Classify />} />
               <Route path="/statement" element={<Statement />} />
               <Route path="*" element={<NotFound />} />

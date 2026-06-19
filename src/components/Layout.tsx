@@ -12,7 +12,7 @@ const links = [
   { path: "/statement", label: "Statement", icon: StatementIcon },
   { path: "/categories", label: "Categories", icon: CategoriesIcon },
   { path: "/classify", label: "Classify", icon: ClassifyIcon },
-  { path: "/upload", label: "Upload CSV", icon: UploadIcon },
+  { path: "/import", label: "Import", icon: UploadIcon },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -49,7 +49,6 @@ export default function Layout({ children }: { children: ReactNode }) {
   };
 
   const ThemeIcon = theme === "dark" ? MoonIcon : theme === "light" ? SunIcon : MonitorIcon;
-
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-950 font-sans transition-colors duration-300 flex">
       {/* Mobile overlay */}
@@ -115,7 +114,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </nav>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
         <header className="sticky top-0 z-10 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/30 shadow-sm">
           <div className="flex items-center gap-3 px-4 py-2.5">
@@ -127,9 +126,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <MenuIcon className="w-5 h-5" />
             </button>
 
-            <span className="font-semibold text-gray-400 dark:text-gray-500 shrink-0 hidden md:block text-sm tracking-wide uppercase">Search</span>
-
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 max-w-md ml-auto">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               <input
                 id="header-search"
@@ -153,7 +150,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </header>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col p-4 md:p-8 animate-fade-in">
+        <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 overflow-y-auto animate-fade-in">
           {children}
         </div>
       </main>

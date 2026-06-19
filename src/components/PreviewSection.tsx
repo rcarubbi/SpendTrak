@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import type { Transaction } from "../types";
 import type { ColDef } from "ag-grid-community";
 import CategoryBadge from "./CategoryBadge";
@@ -31,51 +32,84 @@ interface PreviewSectionProps {
 }
 
 export default function PreviewSection({ pending, pendingDuplicates, rowClassRules, onConfirm, onCancel }: PreviewSectionProps) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [gridHeight, setGridHeight] = useState(400);
+
+  useEffect(() => {
+    const calc = () => {
+      if (!gridRef.current) return;
+      const rect = gridRef.current.getBoundingClientRect();
+      setGridHeight(Math.max(100, Math.floor(window.innerHeight - rect.top - 24)));
+    };
+
+    calc();
+    const ro = new ResizeObserver(calc);
+    if (gridRef.current) ro.observe(gridRef.current);
+    window.addEventListener("resize", calc);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", calc);
+    };
+  }, [pending]);
+
   if (!pending) return null;
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold dark:text-gray-100">
-          Preview — {pending.transactions.length} transactions, {pending.months.length} months
-        </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
-          >
-            Confirm import
-          </button>
+    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm overflow-hidden">
+      <div className="p-4 md:p-5">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+              Preview
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {pending.transactions.length} transactions · {pending.months.length} months · {pending.provider}
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 border border-gray-200 dark:border-gray-600 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg text-sm text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-semibold cursor-pointer hover:from-blue-600 hover:to-purple-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+            >
+              Import
+            </button>
+          </div>
         </div>
+
+        <div className="flex items-center gap-3 flex-wrap mb-4">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">£{pending.total.toLocaleString()}</span>
+          <span className="text-gray-300 dark:text-gray-600">·</span>
+          {pending.months.map((m) => (
+            <span key={m} className="bg-blue-100/80 dark:bg-blue-900/40 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-xs font-medium text-blue-700 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/30">{m}</span>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl mb-4 text-sm font-medium bg-blue-50/80 dark:bg-blue-900/30 backdrop-blur-sm border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 shadow-sm">
+          ℹ Ready to import: {pending.transactions.length} transactions across {pending.months.length} months
+        </div>
+
+        {pendingDuplicates.length > 0 && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl mb-4 text-sm font-medium bg-amber-50/80 dark:bg-amber-900/30 backdrop-blur-sm border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 shadow-sm">
+            ⚠ {pendingDuplicates.length} transaction(s) already exist in loaded data
+          </div>
+        )}
       </div>
 
-      <div className="flex gap-2 flex-wrap mb-3">
-        <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">£{pending.total.toLocaleString()} in debits</span>
-        <span className="text-gray-300 dark:text-gray-600">|</span>
-        {pending.months.map((m) => (
-          <span key={m} className="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-xs font-medium dark:text-blue-200">{m}</span>
-        ))}
+      <div ref={gridRef} className="px-4 md:px-5 pb-4 md:pb-5">
+        <DataGrid
+          rows={pending.transactions}
+          exportFilename={`preview-${pending.provider.replace(/\s+/g, "-")}`}
+          colDefs={previewColDefs}
+          height={gridHeight}
+          rowClassRules={rowClassRules}
+        />
       </div>
-
-      {pendingDuplicates.length > 0 && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-4 text-sm font-semibold bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300">
-          ⚠ {pendingDuplicates.length} transaction(s) already exist in loaded data
-        </div>
-      )}
-
-      <DataGrid
-        rows={pending.transactions}
-        exportFilename={`preview-${pending.provider.replace(/\s+/g, "-")}`}
-        colDefs={previewColDefs}
-        height={400}
-        rowClassRules={rowClassRules}
-      />
     </div>
   );
 }
