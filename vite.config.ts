@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'icons.svg', 'favicon.ico'],
       manifest: {
         name: 'SpendTrak',
         short_name: 'SpendTrak',
@@ -17,7 +17,22 @@ export default defineConfig({
         theme_color: '#1e293b',
         background_color: '#f8fafc',
         display: 'standalone',
+        start_url: '/',
+        orientation: 'portrait',
+        categories: ['finance', 'productivity'],
         icons: [
+          {
+            src: '/favicon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: '/favicon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
           {
             src: '/favicon.svg',
             sizes: '192x192',
@@ -29,6 +44,14 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/svg+xml',
             purpose: 'any maskable',
+          },
+        ],
+        shortcuts: [
+          {
+            name: 'Add Transaction',
+            short_name: 'Add',
+            url: '/add',
+            icons: [{ src: '/favicon.svg', sizes: '192x192' }],
           },
         ],
       },
