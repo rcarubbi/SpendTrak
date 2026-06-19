@@ -205,22 +205,20 @@ export default function Import() {
   }, [pending, months]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col flex-1 overflow-auto gap-6">
       <style>{tagStyle}</style>
 
-      {/* Header card */}
-      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm p-4 md:p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Import</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Upload bank statements (CSV, PDF) to track your spending
-            </p>
-          </div>
-          <div className="shrink-0 text-right">
-            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{allTxs.length} transactions</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Total: £{debitTotal.toLocaleString()}</div>
-          </div>
+      {/* Page header (bare — matches Statement/Categories/Classify pattern) */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Import</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            Upload bank statements (CSV, PDF) to track your spending
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{allTxs.length} transactions</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Total: £{debitTotal.toLocaleString()}</div>
         </div>
       </div>
 
