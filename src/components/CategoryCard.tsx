@@ -19,7 +19,7 @@ export default function CategoryCard({
   onEditColor, onEditType, onDelete, onAddKeyword, onRemoveKeyword,
 }: CategoryCardProps) {
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+    <div className="bg-surface/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
       <div className="border-l-[3px] p-4" style={{ borderLeftColor: cat.color }}>
         {/* Header row */}
         <div className="flex items-center gap-2.5">
@@ -39,7 +39,7 @@ export default function CategoryCard({
               onBlur={(e) => onFinishEdit(cat.id, e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && onCancelEdit()}
               autoFocus
-              className="text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-2 py-1 flex-1 min-w-0"
+              className="text-sm font-semibold border border-gray-300 dark:border-gray-600 bg-surface-solid dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-2 py-1 flex-1 min-w-0"
             />
           ) : (
             <span
@@ -65,8 +65,8 @@ export default function CategoryCard({
                   : "text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/50"
               }`}
             >
-              <option value="debit" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">DEBIT</option>
-              <option value="credit" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">CREDIT</option>
+              <option value="debit" className="bg-surface-solid dark:bg-gray-800 text-gray-900 dark:text-gray-100">DEBIT</option>
+              <option value="credit" className="bg-surface-solid dark:bg-gray-800 text-gray-900 dark:text-gray-100">CREDIT</option>
             </select>
           ) : (
             <span className={`text-xs rounded-full px-2.5 py-0.5 font-semibold shrink-0 ${
@@ -109,7 +109,7 @@ export default function CategoryCard({
           {cat.id !== CATEGORY_IDS.OTHER && (
             <button
               onClick={() => onAddKeyword(cat.id)}
-              className="inline-flex items-center gap-1 border border-dashed border-gray-300 dark:border-gray-600 px-2.5 py-1 rounded-full text-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-gray-300"
+              className="inline-flex items-center gap-1 border border-dashed border-gray-300 dark:border-gray-600 px-2.5 py-1 rounded-full text-xs cursor-pointer hover:bg-surface/40 dark:hover:bg-gray-700 transition-colors dark:text-gray-300"
             >
               + Add
             </button>

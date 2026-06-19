@@ -6,8 +6,8 @@ interface SetupScreenProps {
 
 export default function SetupScreen({ onPickDir }: SetupScreenProps) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
-      <div className="flex flex-col items-center gap-6 p-8 rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-white/30 dark:border-gray-700/30 shadow-2xl shadow-black/5 max-w-md w-full mx-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-surface/40 dark:bg-gray-950 transition-colors duration-300">
+      <div className="flex flex-col items-center gap-6 p-8 rounded-2xl bg-surface/70 dark:bg-gray-900/70 backdrop-blur-xl border border-white/30 dark:border-gray-700/30 shadow-2xl shadow-black/5 max-w-md w-full mx-4">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
           <LogoIcon className="w-7 h-7 text-white" />
         </div>

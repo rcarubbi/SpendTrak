@@ -10,7 +10,7 @@ interface MonthlyBarChartCardProps {
 
 export default function MonthlyBarChartCard({ year, data, catNames, catColorMap, isDark }: MonthlyBarChartCardProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
+    <div className="bg-surface-solid dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
       <p className="text-lg font-semibold mb-4 dark:text-gray-100">Monthly expenses — {year}</p>
       {data.length > 0 && catNames.length > 0 ? (
         <ResponsiveContainer width="100%" height={380}>

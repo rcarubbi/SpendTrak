@@ -3,6 +3,8 @@
 
 @theme {
   --font-family-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --color-surface: #f7f3eb;
+  --color-surface-solid: #f2ede4;
 }
 
 @keyframes fade-in {

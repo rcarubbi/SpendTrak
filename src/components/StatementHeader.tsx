@@ -15,7 +15,7 @@ export default function StatementHeader({ dupGroupsLength, debitTotal, creditTot
           </span>
         )}
       </div>
-      <div className="flex items-center gap-4 px-4 py-2 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 shadow-sm">
+      <div className="flex items-center gap-4 px-4 py-2 rounded-xl bg-surface/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 shadow-sm">
         <div className="text-sm">
           <span className="text-gray-500 dark:text-gray-400">Expenses: </span>
           <span className="font-semibold text-gray-900 dark:text-gray-100">£{debitTotal.toLocaleString()}</span>

@@ -25,14 +25,14 @@ export default function FilterBar({
         placeholder="Search description..."
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="flex-1 min-w-[150px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 md:hidden"
+        className="flex-1 min-w-[150px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-surface-solid dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 md:hidden"
       />
       <select
         id="month-filter"
         name="monthFilter"
         value={monthFilter}
         onChange={(e) => onMonthFilterChange(e.target.value)}
-        className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-surface-solid dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       >
         <option value="all">All months</option>
         {loadedMonths.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -42,7 +42,7 @@ export default function FilterBar({
         name="catFilter"
         value={catFilter}
         onChange={(e) => onCatFilterChange(e.target.value)}
-        className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-surface-solid dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       >
         <option value="all">All categories</option>
         {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -52,7 +52,7 @@ export default function FilterBar({
         className={`px-3 py-2 rounded-md text-sm font-semibold border cursor-pointer transition-colors ${
           showDuplicates
             ? "bg-amber-100 border-amber-300 text-amber-800"
-            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
+            : "bg-surface-solid dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-white hover:bg-surface/40 dark:hover:bg-gray-600"
         }`}
       >
         {showDuplicates ? "⇤ Show all" : `⚠ Duplicates (${dupCount})`}

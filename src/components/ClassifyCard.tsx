@@ -19,7 +19,7 @@ export default function ClassifyCard({ desc, count, total, isOneOff, customKeywo
   const showKeyword = !isOneOff;
 
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+    <div className="bg-surface/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
       <div className="p-4">
         {/* Description + stats */}
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -57,7 +57,7 @@ export default function ClassifyCard({ desc, count, total, isOneOff, customKeywo
                 value={customKeyword}
                 onChange={(e) => onKeywordChange(desc, e.target.value)}
                 placeholder={autoKeyword || "e.g. MERCADO"}
-                className="flex-1 min-w-0 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all placeholder:text-gray-400"
+                className="flex-1 min-w-0 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-surface/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all placeholder:text-gray-400"
               />
             </div>
           )}

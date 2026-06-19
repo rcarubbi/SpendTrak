@@ -62,7 +62,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const ThemeIcon = theme === "dark" ? MoonIcon : theme === "light" ? SunIcon : MonitorIcon;
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-950 font-sans transition-colors duration-300 flex md:gap-2">
+    <div className="h-screen bg-surface/40 dark:bg-gray-950 font-sans transition-colors duration-300 flex md:gap-2">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -75,7 +75,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <nav
         aria-label="Main navigation"
-        className={`fixed md:static z-20 w-64 h-screen md:h-[calc(100vh-0.5rem)] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-r border-white/30 dark:border-gray-700/30 md:rounded-br-2xl md:mb-2 shadow-2xl shadow-black/5 transition-transform duration-300 ease-out flex flex-col overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        className={`fixed md:static z-20 w-64 h-screen md:h-[calc(100vh-0.5rem)] bg-surface/80 dark:bg-gray-900/80 backdrop-blur-xl border-r border-white/30 dark:border-gray-700/30 md:rounded-br-2xl md:mb-2 shadow-2xl shadow-black/5 transition-transform duration-300 ease-out flex flex-col overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         {/* Brand */}
         <div className="flex items-center justify-between px-5 py-5 shrink-0">
@@ -104,8 +104,8 @@ export default function Layout({ children }: { children: ReactNode }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 no-underline ${
                   isActive
-                    ? "bg-white/90 dark:bg-white/10 shadow-sm border-l-[3px] border-blue-500 text-blue-700 dark:text-blue-400 -ml-[1px]"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200 border-l-[3px] border-transparent -ml-[1px]"
+                    ? "bg-surface/90 dark:bg-white/10 shadow-sm border-l-[3px] border-blue-500 text-blue-700 dark:text-blue-400 -ml-[1px]"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-surface/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200 border-l-[3px] border-transparent -ml-[1px]"
                 }`
               }
               onClick={(e) => {
@@ -138,7 +138,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header         className="sticky top-0 z-10 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/30 shadow-sm rounded-bl-2xl">
+        <header         className="sticky top-0 z-10 bg-surface/60 dark:bg-gray-800/60 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/30 shadow-sm rounded-bl-2xl">
           <div className="flex items-center gap-3 px-4 py-2.5">
             <button
               onClick={toggleSidebar}
@@ -157,7 +157,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 onChange={handleSearchChange}
                 placeholder="Search transactions..."
                 aria-label="Search transactions"
-                className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all placeholder:text-gray-400"
+                className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-surface/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all placeholder:text-gray-400"
               />
             </div>
 

@@ -26,7 +26,7 @@ export default function FileDropZone({ dragging, providers, onDragOver, onDragLe
       className={`flex flex-col items-center justify-center gap-3 py-12 px-6 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200 ${
         dragging
           ? "border-blue-400 bg-blue-50/80 dark:bg-blue-900/20 shadow-[0_0_20px_rgba(59,130,246,0.15)]"
-          : "border-gray-300 dark:border-gray-600 bg-white/50 dark:bg-gray-800/50 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-white/80 dark:hover:bg-gray-800/80"
+          : "border-gray-300 dark:border-gray-600 bg-surface/50 dark:bg-gray-800/50 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-surface/80 dark:hover:bg-gray-800/80"
       }`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}

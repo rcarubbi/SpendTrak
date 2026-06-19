@@ -23,7 +23,7 @@ export default function CategorySelectCell({ data, categories, onReclassify }: C
       onClick={(e) => e.stopPropagation()}
     >
       {categories.map((c) => (
-        <option key={c.id} value={c.id} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        <option key={c.id} value={c.id} className="bg-surface-solid dark:bg-gray-800 text-gray-900 dark:text-white">
           {c.name}
         </option>
       ))}

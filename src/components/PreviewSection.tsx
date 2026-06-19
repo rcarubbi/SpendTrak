@@ -55,7 +55,7 @@ export default function PreviewSection({ pending, pendingDuplicates, rowClassRul
   if (!pending) return null;
 
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-surface/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm overflow-hidden">
       <div className="p-4 md:p-5">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div>
@@ -69,7 +69,7 @@ export default function PreviewSection({ pending, pendingDuplicates, rowClassRul
           <div className="flex gap-2 shrink-0">
             <button
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-200 dark:border-gray-600 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg text-sm text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-all"
+              className="px-4 py-2 border border-gray-200 dark:border-gray-600 bg-surface/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg text-sm text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-surface/40 dark:hover:bg-gray-600 transition-all"
             >
               Cancel
             </button>

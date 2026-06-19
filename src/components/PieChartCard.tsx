@@ -16,7 +16,7 @@ interface PieChartCardProps {
 
 export default function PieChartCard({ title, data, total, income, catColorMap, isDark, emptyText }: PieChartCardProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
+    <div className="bg-surface-solid dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-xs">
       <div className="flex justify-between items-center mb-2">
         <p className="text-lg font-semibold dark:text-gray-100">{title}</p>
         <div className="text-right text-sm">

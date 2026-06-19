@@ -223,7 +223,7 @@ export default function Import() {
       </div>
 
       {/* Provider + Drop zone card */}
-      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm p-4 md:p-5">
+      <div className="bg-surface/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/30 rounded-xl shadow-sm p-4 md:p-5">
         <div className="flex items-center gap-4 mb-4">
           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Provider</span>
           <ProviderSelector
